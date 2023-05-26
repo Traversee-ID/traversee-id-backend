@@ -31,6 +31,14 @@ class Category(db.Model):
     name: str = db.Column(db.String(100), unique=True, nullable=False)
     image_url: str = db.Column(db.String, nullable=False)
 
+@app.route("/campaigns", methods=["GET"])
+def get_campaigns():
+    return {"data": ""}, 200
+
+@app.route("/categories/<int:id>/campaigns", methods=["GET"])
+def get_campaigns_by_category():
+    return {"data": ""}, 200
+
 @app.route("/categories", methods=["GET"])
 def get_categories():
     categories = db.session.query(Category).order_by(Category.name.asc()).all()
