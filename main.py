@@ -24,8 +24,8 @@ def user_info(id):
         return {"message": "User not found!"}, 404
     
 @dataclass
-class Category(db.Model):
-    __tablename__ = "categories"
+class CampaignCategory(db.Model):
+    __tablename__ = "campaign_categories"
 
     id: int = db.Column(db.Integer, primary_key=True)
     name: str = db.Column(db.String(100), unique=True, nullable=False)
@@ -35,18 +35,18 @@ class Category(db.Model):
 def get_campaigns():
     return {"data": ""}, 200
 
-@app.route("/categories/<int:id>/campaigns", methods=["GET"])
-def get_campaigns_by_category():
+@app.route("/campaign-categories/<int:id>/campaigns", methods=["GET"])
+def get_campaigns_by_category(id):
     return {"data": ""}, 200
 
-@app.route("/categories", methods=["GET"])
-def get_categories():
-    categories = db.session.query(Category).order_by(Category.name.asc()).all()
+@app.route("/campaign-categories", methods=["GET"])
+def get_campaign_categories():
+    categories = db.session.query(CampaignCategory).order_by(CampaignCategory.name.asc()).all()
     return {"data": categories}, 200
 
-@app.route("/categories/<int:id>", methods=["GET"])
-def get_category(id):
-    category = db.session.get(Category, id)
+@app.route("/campaign-categories/<int:id>", methods=["GET"])
+def get_campaign_category(id):
+    category = db.session.get(CampaignCategory, id)
     if not category:
         return {"message": f"Category with id {id} not found!"}, 404
     return {"data": category}, 200
