@@ -71,7 +71,14 @@ def get_campaign_detail(id):
 
 @app.route("/campaign-categories/<int:id>/campaigns", methods=["GET"])
 def get_campaigns_by_category(id):
-    return {"data": ""}, 200
+    category = db.session.get(CampaignCategory, id)
+    if not category:
+        return {"message": f"Category with id {id} doesn't exist"}, 404
+    
+    campaigns = db.session.query(Campaign) \
+        .filter_by(category_id=id) \
+        .order_by(Campaign.created_at.desc()).all()
+    return {"data": campaigns}, 200
 
 @app.route("/campaign-categories", methods=["GET"])
 def get_campaign_categories():
