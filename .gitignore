@@ -7,3 +7,4 @@ venv.bak/
 __pycache__/
 .DS_Store
 ._*
+instance/
