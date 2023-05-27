@@ -54,6 +54,21 @@ class CampaignCategory(db.Model):
 def get_campaigns():
     return {"data": ""}, 200
 
+@app.route("/campaigns/<int:id>", methods=["GET"])
+def get_campaign(id):
+    campaign = db.session.get(Campaign, id)
+    if not campaign:
+        return {"message": f"Campaign with id {id} doesn't exist"}, 404
+    return {"data": campaign}, 200
+
+@app.route("/campaigns/<int:id>/details", methods=["GET"])
+def get_campaign_detail(id):
+    campaign_detail = db.session.query(CampaignDetails) \
+        .filter_by(campaign_id=id).first()
+    if not campaign_detail:
+        return {"message": f"Campaign with id {id} doesn't exist"}, 404
+    return {"data": campaign_detail}, 200
+
 @app.route("/campaign-categories/<int:id>/campaigns", methods=["GET"])
 def get_campaigns_by_category(id):
     return {"data": ""}, 200
