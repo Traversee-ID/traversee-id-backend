@@ -52,7 +52,9 @@ class CampaignCategory(db.Model):
 
 @app.route("/campaigns", methods=["GET"])
 def get_campaigns():
-    return {"data": ""}, 200
+    campaigns = db.session.query(Campaign) \
+        .order_by(Campaign.created_at.desc()).all()
+    return {"data": campaigns}, 200
 
 @app.route("/campaigns/<int:id>", methods=["GET"])
 def get_campaign(id):
