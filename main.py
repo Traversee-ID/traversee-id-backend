@@ -1,3 +1,4 @@
+from authentication import authenticated_only
 from dataclasses import dataclass
 from firebase_admin import auth, initialize_app
 from flask import Flask
@@ -62,6 +63,16 @@ def get_campaign(id):
     if not campaign:
         return {"message": f"Campaign with id {id} doesn't exist"}, 404
     return {"data": campaign}, 200
+
+@app.route("/campaigns/<int:id>/registrations", methods=["POST"])
+@authenticated_only
+def register_campaign(id):
+    return {"data": ""}, 201
+
+@app.route("/campaigns/<int:id>/submissions", methods=["POST"])
+@authenticated_only
+def submit_campaign(id):
+    return {"data": ""}, 201
 
 @app.route("/campaigns/<int:id>/details", methods=["GET"])
 def get_campaign_detail(id):
