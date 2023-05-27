@@ -1,7 +1,7 @@
 from authentication import authenticated_only
 from dataclasses import dataclass
 from firebase_admin import auth, initialize_app
-from flask import Flask
+from flask import Flask, request
 from credentials import credentials
 from flask_sqlalchemy import SQLAlchemy
 from os import getenv
@@ -33,6 +33,7 @@ class Campaign(db.Model):
     image_url: str = db.Column(db.String, nullable=False)
     category_id: int = db.Column(db.Integer, db.ForeignKey('campaign_categories.id'), nullable=False)
     details = db.relationship("CampaignDetails", uselist=False)
+    participants = db.relationship("CampaignParticipant", uselist=False)
     created_at = db.Column(db.DateTime, default=db.func.now())
     updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
@@ -42,6 +43,14 @@ class CampaignDetails(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), nullable=False)
+
+@dataclass
+class CampaignParticipant(db.Model):
+    __tablename__ = "campaign_participants"
+
+    user_id: str = db.Column(db.String, primary_key=True)
+    campaign_id: int = db.Column(db.Integer, db.ForeignKey('campaigns.id'), primary_key=True)
+    submission_url: str = db.Column(db.String)
 
 @dataclass
 class CampaignCategory(db.Model):
@@ -67,7 +76,22 @@ def get_campaign(id):
 @app.route("/campaigns/<int:id>/registrations", methods=["POST"])
 @authenticated_only
 def register_campaign(id):
-    return {"data": ""}, 201
+    campaign = db.session.get(Campaign, id)
+    if not campaign:
+        return {"message": f"Campaign with id {id} doesn't exist"}, 404
+    
+    user_id = request.user.get("user_id")
+    campaign_participant = db.session.query(CampaignParticipant) \
+        .filter_by(user_id=user_id, campaign_id=campaign.id).first()
+    
+    if campaign_participant:
+        return {"message": f"User {user_id} is already registered"}, 409
+    
+    campaign_participant = CampaignParticipant(user_id=user_id, campaign_id=campaign.id)
+    db.session.add(campaign_participant)
+    db.session.commit()
+
+    return {"data": campaign_participant}, 201
 
 @app.route("/campaigns/<int:id>/submissions", methods=["POST"])
 @authenticated_only
