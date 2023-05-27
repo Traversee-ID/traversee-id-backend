@@ -24,6 +24,25 @@ def user_info(id):
         return {"message": "User not found!"}, 404
     
 @dataclass
+class Campaign(db.Model):
+    __tablename__ = "campaigns"
+
+    id: int = db.Column(db.Integer, primary_key=True)
+    name: str = db.Column(db.String(100), nullable=False)
+    image_url: str = db.Column(db.String, nullable=False)
+    category_id: int = db.Column(db.Integer, db.ForeignKey('campaign_categories.id'), nullable=False)
+    details = db.relationship("CampaignDetails", uselist=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
+    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+
+@dataclass
+class CampaignDetails(db.Model):
+    __tablename__ = "campaign_details"
+
+    id = db.Column(db.Integer, primary_key=True)
+    campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), nullable=False)
+
+@dataclass
 class CampaignCategory(db.Model):
     __tablename__ = "campaign_categories"
 
