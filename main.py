@@ -33,6 +33,7 @@ class Campaign(db.Model):
     id: int = db.Column(db.Integer, primary_key=True)
     name: str = db.Column(db.String(100), nullable=False)
     image_url: str = db.Column(db.String, nullable=False)
+    place: str = db.Column(db.String, nullable=False)
     start_date: date = db.Column(db.Date, nullable=False)
     end_date: date = db.Column(db.Date, nullable=False)
     category_id: int = db.Column(db.Integer, db.ForeignKey('campaign_categories.id'), nullable=False)
