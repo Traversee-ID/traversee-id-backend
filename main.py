@@ -62,12 +62,14 @@ class CampaignCategory(db.Model):
     image_url: str = db.Column(db.String, nullable=False)
 
 @app.route("/campaigns", methods=["GET"])
+@authenticated_only
 def get_campaigns():
     campaigns = db.session.query(Campaign) \
         .order_by(Campaign.created_at.desc()).all()
     return {"data": campaigns}, 200
 
 @app.route("/campaigns/<int:id>", methods=["GET"])
+@authenticated_only
 def get_campaign(id):
     campaign = db.session.get(Campaign, id)
     if not campaign:
@@ -116,6 +118,7 @@ def submit_campaign_tasks(id):
     return {"data": campaign_participant}, 201
 
 @app.route("/campaigns/<int:id>/details", methods=["GET"])
+@authenticated_only
 def get_campaign_detail(id):
     campaign_detail = db.session.query(CampaignDetails) \
         .filter_by(campaign_id=id).first()
@@ -124,6 +127,7 @@ def get_campaign_detail(id):
     return {"data": campaign_detail}, 200
 
 @app.route("/campaign-categories/<int:id>/campaigns", methods=["GET"])
+@authenticated_only
 def get_campaigns_by_category(id):
     category = db.session.get(CampaignCategory, id)
     if not category:
@@ -135,12 +139,14 @@ def get_campaigns_by_category(id):
     return {"data": campaigns}, 200
 
 @app.route("/campaign-categories", methods=["GET"])
+@authenticated_only
 def get_campaign_categories():
     categories = db.session.query(CampaignCategory) \
         .order_by(CampaignCategory.name.asc()).all()
     return {"data": categories}, 200
 
 @app.route("/campaign-categories/<int:id>", methods=["GET"])
+@authenticated_only
 def get_campaign_category(id):
     category = db.session.get(CampaignCategory, id)
     if not category:
