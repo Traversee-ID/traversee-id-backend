@@ -30,12 +30,18 @@ def user_info(id):
 class Campaign(db.Model):
     __tablename__ = "campaigns"
 
+    status: str
+    start_date: str
+    end_date: str
+    category_name: str
+    total_participants: int
+
     id: int = db.Column(db.Integer, primary_key=True)
     name: str = db.Column(db.String(100), nullable=False)
     image_url: str = db.Column(db.String, nullable=False)
     place: str = db.Column(db.String, nullable=False)
-    start_date: date = db.Column(db.Date, nullable=False)
-    end_date: date = db.Column(db.Date, nullable=False)
+    _start_date = db.Column("start_date", db.Date, nullable=False)
+    _end_date = db.Column("end_date", db.Date, nullable=False)
     category_id: int = db.Column(db.Integer, db.ForeignKey('campaign_categories.id'), nullable=False)
     details = db.relationship("CampaignDetails", uselist=False)
     participants = db.relationship("CampaignParticipant", uselist=True)
@@ -44,38 +50,46 @@ class Campaign(db.Model):
 
     @property
     def status(self):
-        if self.start_date > date.today():
+        if self._start_date > date.today():
             return "Coming Soon"
-        if self.end_date <= date.today():
+        if self._end_date <= date.today():
             return "Ongoing"
         return "Completed"
-
-    def serialize(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "image_url": self.image_url,
-            "start_date": self.start_date.strftime("%d %B %Y"),
-            "end_date": self.end_date.strftime("%d %B %Y"),
-            "status": self.status,
-            "category_id": self.category_id,
-            "category_name": db.session.get(CampaignCategory, self.category_id).name,
-            "total_participants": len(self.participants)
-        }
     
-    @staticmethod
-    def serialize_list(campaigns):
-        return [campaign.serialize() for campaign in campaigns]
+    @property
+    def start_date(self):
+        return self._start_date.strftime("%d %B %Y")
+    
+    @property
+    def end_date(self):
+        return self._end_date.strftime("%d %B %Y")
+    
+    @property
+    def category_name(self):
+        return db.session.get(CampaignCategory, self.category_id).name
+    
+    @property
+    def total_participants(self):
+        return len(self.participants)
 
 @dataclass
 class CampaignDetails(db.Model):
     __tablename__ = "campaign_details"
 
     id = db.Column(db.Integer, primary_key=True)
+    initiator_id = db.Column(db.String, nullable=False)
     description: str = db.Column(db.Text, nullable=False)
     terms: str = db.Column(db.Text, nullable=False)
     mission: str = db.Column(db.Text, nullable=False)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), nullable=False)
+
+@dataclass
+class CampaignWinner(db.Model):
+    __tablename__ = "campaign_winners"
+
+    user_id: str = db.Column(db.String, primary_key=True)
+    campaign_id: int = db.Column(db.Integer, db.ForeignKey('campaigns.id'), primary_key=True)
+    position: int = db.Column(db.Integer, nullable=False)
 
 @dataclass
 class CampaignParticipant(db.Model):
@@ -98,7 +112,7 @@ class CampaignCategory(db.Model):
 def get_campaigns():
     campaigns = db.session.query(Campaign) \
         .order_by(Campaign.created_at.desc()).all()
-    return {"data": Campaign.serialize_list(campaigns)}, 200
+    return {"data": campaigns}, 200
 
 @app.route("/campaigns/<int:id>", methods=["GET"])
 @authenticated_only
@@ -106,7 +120,7 @@ def get_campaign(id):
     campaign = db.session.get(Campaign, id)
     if not campaign:
         return {"message": f"Campaign with id {id} doesn't exist"}, 404
-    return {"data": campaign.serialize()}, 200
+    return {"data": campaign}, 200
 
 @app.route("/campaigns/<int:id>/registrations", methods=["POST"])
 @authenticated_only
