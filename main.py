@@ -47,8 +47,8 @@ class Campaign(db.Model):
         if self.start_date > date.today():
             return "Coming Soon"
         if self.end_date <= date.today():
-            return "On Going"
-        return "Finished"
+            return "Ongoing"
+        return "Completed"
 
     def serialize(self):
         return {
