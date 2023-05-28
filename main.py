@@ -1,10 +1,11 @@
-from authentication import authenticated_only
-from dataclasses import dataclass
-from firebase_admin import auth, initialize_app
 from flask import Flask, request
+from flask_sqlalchemy import SQLAlchemy
+from firebase_admin import auth, initialize_app
 from credentials import credentials
 from flask_sqlalchemy import SQLAlchemy
 from os import getenv
+from authentication import authenticated_only
+from dataclasses import dataclass
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = getenv("DATABASE_URI")
@@ -95,8 +96,24 @@ def register_campaign(id):
 
 @app.route("/campaigns/<int:id>/submissions", methods=["POST"])
 @authenticated_only
-def submit_campaign(id):
-    return {"data": ""}, 201
+def submit_campaign_tasks(id):
+    campaign = db.session.get(Campaign, id)
+    if not campaign:
+        return {"message": f"Campaign with id {id} doesn't exist"}, 404
+    
+    user_id = request.user.get("user_id")
+    campaign_participant = db.session.query(CampaignParticipant) \
+        .filter_by(user_id=user_id, campaign_id=campaign.id).first()
+    
+    submission_url = request.json.get("submission_url")
+    if campaign_participant:
+        campaign_participant.submission_url = submission_url
+    else:
+        campaign_participant = CampaignParticipant(user_id=user_id, campaign_id=campaign.id, submission_url=submission_url)
+        db.session.add(campaign_participant)
+    db.session.commit()
+    
+    return {"data": campaign_participant}, 201
 
 @app.route("/campaigns/<int:id>/details", methods=["GET"])
 def get_campaign_detail(id):
