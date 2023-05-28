@@ -71,6 +71,18 @@ class Campaign(db.Model):
     @property
     def total_participants(self):
         return len(self.participants)
+    
+    def serialize(self, user_id):
+        participant = db.session.query(CampaignParticipant) \
+            .filter_by(user_id=user_id, campaign_id=self.id).first()
+        return {
+            "campaign": self,
+            "is_registered": participant != None
+        }
+    
+    @staticmethod
+    def serialize_list(user_id, campaigns):
+        return [campaign.serialize(user_id) for campaign in campaigns]
 
 @dataclass
 class CampaignDetails(db.Model):
@@ -110,9 +122,18 @@ class CampaignCategory(db.Model):
 @app.route("/campaigns", methods=["GET"])
 @authenticated_only
 def get_campaigns():
-    campaigns = db.session.query(Campaign) \
-        .order_by(Campaign.created_at.desc()).all()
-    return {"data": campaigns}, 200
+    page = request.args.get("page")
+
+    if isinstance(page, str) & page.isdecimal():
+        campaigns = db.session.query(Campaign) \
+            .order_by(Campaign.created_at.desc()) \
+            .paginate(page=int(page), per_page=1, error_out=False)
+    else:
+        campaigns = db.session.query(Campaign) \
+            .order_by(Campaign.created_at.desc()).all()
+
+    user_id = request.user.get("user_id")
+    return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
 
 @app.route("/campaigns/<int:id>", methods=["GET"])
 @authenticated_only
@@ -120,7 +141,9 @@ def get_campaign(id):
     campaign = db.session.get(Campaign, id)
     if not campaign:
         return {"message": f"Campaign with id {id} doesn't exist"}, 404
-    return {"data": campaign}, 200
+    
+    user_id = request.user.get("user_id")
+    return {"data": campaign.serialize(user_id)}, 200
 
 @app.route("/campaigns/<int:id>/registrations", methods=["POST"])
 @authenticated_only
