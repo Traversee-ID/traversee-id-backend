@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from firebase_admin import auth, initialize_app
+from firebase_admin import initialize_app
 from credentials import credentials
 from flask_sqlalchemy import SQLAlchemy
 from os import getenv
@@ -16,48 +16,59 @@ firebase = initialize_app(credentials)
 
 @dataclass
 class Forum(db.Model):
+    __tablename__ = "forums"
 
-    forum_id: int = db.Column(db.Integer, primary_key=True)
+    total_likes: int
+
+    id: int = db.Column(db.Integer, primary_key=True)
     title: str = db.Column(db.String(100), nullable=False)
     text: str = db.Column(db.String(500), nullable=False)
-    created_at: str = db.Column(db.DateTime, default=db.func.now())
-    author: str = db.Column(db.String, nullable=False)
-    comments = db.relationship('Comment', lazy=True)
-    likes: int = db.Column(db.Integer, default = 0)
+    author_id: str = db.Column(db.String, nullable=False)
     image_url: str = db.Column(db.String)
+    comments = db.relationship('Comment', uselist=True)
+    likes = db.relationship('ForumLike', uselist=True)
+    created_at = db.Column(db.DateTime, default=db.func.now())
 
-    def __init__(self, title, text, author):
-        self.title = title
-        self.text = text
-        self.author = author
+    @property
+    def total_likes(self):
+        return len(self.likes)
+
+@dataclass
+class ForumLike(db.Model):
+    __tablename__ = "forum_likes"
+
+    forum_id: int = db.Column(db.ForeignKey('forums.id'), primary_key=True)
+    user_id: str = db.Column(db.String, primary_key=True)
 
 @dataclass
 class Comment(db.Model):
+    __tablename__ = "comments"
 
-    comment_id: int = db.Column(db.Integer, primary_key=True)
+    id: int = db.Column(db.Integer, primary_key=True)
     text: str = db.Column(db.String(300), nullable=False)
-    author: str = db.Column(db.String, nullable=False)
-    forum: int = db.Column(db.Integer, db.ForeignKey('forum.forum_id'), nullable=False)
-
-    def __init__(self, text, author, forum):
-        self.text = text
-        self.author = author
-        self.forum = forum
+    author_id: str = db.Column(db.String, nullable=False)
+    forum_id: int = db.Column(db.Integer, db.ForeignKey('forums.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.now())
 
 
 @app.route("/forums")
-def show_forum():
+def get_forums():
     forums = db.session.query(Forum).order_by(Forum.created_at.desc()).all()
     return {"data": forums}, 200
 
 @app.route("/forums", methods = ['POST'])
 @authenticated_only
 def create_forum():
-    data = request.get_json()
-    newForum = Forum(data['title'], data['text'], request.user.get('user_id'))
-    db.session.add(newForum)
+    title = request.json.get("title")
+    text = request.json.get("text")
+
+    if not title or not text:
+        return {"message": "Title and text are required"}, 400
+    
+    forum = Forum(title=title, text=text, author_id=request.user.get('user_id'))
+    db.session.add(forum)
     db.session.commit()
-    return {"message": f"Forum created"}, 200
+    return {"data": forum}, 200
 
 @app.route('/forums/<int:id>')
 def get_forum(id):
