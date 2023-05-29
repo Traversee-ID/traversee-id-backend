@@ -362,6 +362,10 @@ def submit_campaign_tasks(id):
         .filter_by(user_id=user_id, campaign_id=campaign.id).first()
     
     submission_url = request.json.get("submission_url")
+
+    if not submission_url:
+        return {"message": "Submission url are required"}, 400
+    
     if campaign_participant:
         campaign_participant.submission_url = submission_url
     else:
