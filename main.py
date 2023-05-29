@@ -293,6 +293,11 @@ class CampaignCategory(db.Model):
 @app.route("/users/<string:id>/campaigns", methods=["GET"])
 @authenticated_only
 def get_registred_campaigns(id):
+    try:
+        auth.get_user(uid=id)
+    except auth.UserNotFoundError:
+        return {"message": f"User with id {id} doesn't exist"}, 404
+
     campaigns_participant = db.session.query(CampaignParticipant.campaign_id) \
         .filter_by(user_id=id).all()
     campaigns_id = [campaign_id[0] for campaign_id in campaigns_participant]
