@@ -277,10 +277,10 @@ class CampaignCategory(db.Model):
 def get_campaigns():
     page = request.args.get("page")
 
-    if isinstance(page, str) & page.isdecimal():
+    if page is not None and page.isdecimal():
         campaigns = db.session.query(Campaign) \
             .order_by(Campaign.created_at.desc()) \
-            .paginate(page=int(page), per_page=1, error_out=False)
+            .paginate(page=int(page), per_page=5, error_out=False)
     else:
         campaigns = db.session.query(Campaign) \
             .order_by(Campaign.created_at.desc()).all()
