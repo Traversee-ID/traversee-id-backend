@@ -80,50 +80,97 @@ def get_forum(id):
 @app.route('/forums/<int:id>', methods=["DELETE"])
 @authenticated_only
 def delete_forum(id):
-    forum = Forum.query.filter_by(forum_id=id).first()
-    if forum:
-        db.session.delete(forum)
-        db.session.commit()
-        return {"message": f"Forum with id {id} deleted"}, 200
-    return {"message": f"Forum with id {id} doesn't exist"}, 404
+    forum = db.session.get(Forum, id)
+    if not forum:
+        return {"message": f"Forum with id {id} doesn't exist"}, 404
+    
+    if forum.author_id != request.user.get("user_id"):
+        return {"message": f"You're not author of the forum with id {id}"}, 403
+    
+    db.session.delete(forum)
+    db.session.commit()
+    return {"message": f"Forum with id {id} deleted"}, 200
 
-@app.route('/forums/<int:id>/likes', methods=["PUT"])
+@app.route('/forums/<int:id>/likes', methods=["POST"])
 @authenticated_only
-def like_forum(id):
-    forum = Forum.query.filter_by(forum_id=id).first()
-    if forum:
-        forum.likes += 1
-        db.session.commit()
-        return {"message": f"Added like to forum with id {id}"}, 200
-    return {"message": f"Forum with id {id} doesn't exist"}, 404
+def add_forum_likes(id):
+    forum = db.session.get(Forum, id)
+    if not forum:
+        return {"message": f"Forum with id {id} doesn't exist"}, 404
+    
+    user_id = request.user.get("user_id")
+    forum_likes = db.session.get(ForumLike, (forum.id, user_id))
+    if forum_likes:
+        return {"message": f"Forum {id} is already liked"}, 409
+    
+    forum_likes = ForumLike(forum_id=forum.id, user_id=user_id)
+    db.session.add(forum_likes)
+    db.session.commit()
+    return {"data": forum}, 200
+    
 
-@app.route('/forums/<int:id>/comments', methods=["GET", "POST"])
+@app.route('/forums/<int:id>/likes', methods=["DELETE"])
 @authenticated_only
-def comment_forum(id):
-    forum = Forum.query.filter_by(forum_id=id).first()
+def delete_forum_likes(id):
+    forum = db.session.get(Forum, id)
+    if not forum:
+        return {"message": f"Forum with id {id} doesn't exist"}, 404
+    
+    user_id = request.user.get("user_id")
+    forum_likes = db.session.get(ForumLike, (forum.id, user_id))
+    if not forum_likes:
+        return {"message": f"Forum {id} is not liked yet"}, 409
+    
+    db.session.delete(forum_likes)
+    db.session.commit()
+    return {"data": forum}, 200
 
-    if request.method == 'GET' and forum:
-        comments = Comment.query.filter_by(forum=id).all()
-        return {"data": comments}, 200
+@app.route('/forums/<int:id>/comments', methods=["POST"])
+@authenticated_only
+def create_forum_comments(id):
+    forum = db.session.get(Forum, id)
+    if not forum:
+        return {"message": f"Forum with id {id} doesn't exist"}, 404
 
-    if request.method == 'POST' and forum:
-        data = request.get_json()
-        newComment = Comment(data['text'], request.user.get('user_id'), id)
-        db.session.add(newComment)
-        db.session.commit()
-        return {"message": f"Comment added to forum with id {id}"}, 200
+    text = request.json.get("text")
+    if not text:
+        return {"message": "Text are required"}, 400
 
-    return {"message": f"Forum with id {id} doesn't exist!"}, 404
+    comments = Comment(text=text, author_id=request.user.get('user_id'), forum_id=forum.id)
+    db.session.add(comments)
+    db.session.commit()
+    return {"data": comments}, 200
+
+@app.route('/forums/<int:id>/comments', methods=["GET"])
+@authenticated_only
+def get_forum_comments(id):
+    forum = db.session.get(Forum, id)
+    if not forum:
+        return {"message": f"Forum with id {id} doesn't exist"}, 404
+
+    comments = db.session.query(Comment) \
+        .filter_by(forum_id=forum.id) \
+        .order_by(Comment.created_at.desc()).all()
+    
+    return {"data": comments}, 200
 
 @app.route('/forums/<int:id>/comments/<int:comment_id>', methods=["DELETE"])
 @authenticated_only
-def delete_comment(id, comment_id):
-    comment = Comment.query.filter_by(comment_id=comment_id).first()
-    if comment:
-        db.session.delete(comment)
-        db.session.commit()
-        return {"message": f"Comment with id {comment_id} deleted"}, 200
-    return {"message": f"Comment with id {comment_id} doesn't exist"}, 404
+def delete_forum_comment(id, comment_id):
+    forum = db.session.get(Forum, id)
+    if not forum:
+        return {"message": f"Forum with id {id} doesn't exist"}, 404
+    
+    comment = db.session.get(Comment, comment_id)
+    if not comment:
+        return {"message": f"Comment with id {id} doesn't exist"}, 404
+    
+    if comment.author_id != request.user.get("user_id"):
+        return {"message": f"You're not author of the comment with id {id}"}, 403
+    
+    db.session.delete(comment)
+    db.session.commit()
+    return {"message": f"Comment with id {comment_id} deleted"}, 200
     
 @dataclass
 class Campaign(db.Model):
