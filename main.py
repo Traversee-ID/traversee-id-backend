@@ -262,7 +262,7 @@ class CampaignWinner(db.Model):
     __tablename__ = "campaign_winners"
 
     user_id: str = db.Column(db.String, primary_key=True)
-    campaign_id: int = db.Column(db.Integer, db.ForeignKey('campaigns.id'), primary_key=True)
+    campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), primary_key=True)
     position: int = db.Column(db.Integer, nullable=False)
 
 @dataclass
@@ -270,8 +270,9 @@ class CampaignParticipant(db.Model):
     __tablename__ = "campaign_participants"
 
     user_id: str = db.Column(db.String, primary_key=True)
-    campaign_id: int = db.Column(db.Integer, db.ForeignKey('campaigns.id'), primary_key=True)
+    campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), primary_key=True)
     submission_url: str = db.Column(db.String)
+    created_at = db.Column(db.DateTime, default=db.func.now(), nullable=False)
 
 @dataclass
 class CampaignCategory(db.Model):
@@ -380,6 +381,24 @@ def get_campaign_detail(id):
     
     user_id = request.user.get("user_id")
     return {"data": campaign_detail.serialize(user_id, id)}, 200
+
+@app.route("/campaigns/<int:id>/participants", methods=["GET"])
+@authenticated_only
+def get_campaign_participants(id):
+    campaign = db.session.get(Campaign, id)
+    if not campaign:
+        return {"message": f"Campaign with id {id} doesn't exist"}, 404
+    
+    campaign_winners = db.session.query(CampaignWinner) \
+        .filter_by(campaign_id=id) \
+        .order_by(CampaignWinner.position.asc()).all()
+    campaign_winners_id = [winner.user_id for winner in campaign_winners]
+
+    campaign_participants = db.session.query(CampaignParticipant) \
+        .filter(CampaignParticipant.user_id.notin_(campaign_winners_id), CampaignParticipant.campaign_id==id) \
+        .order_by(CampaignParticipant.created_at.asc()).all()
+    
+    return {"data": [{"winners": campaign_winners}, {"other_participants": campaign_participants}]}, 200
 
 @app.route("/campaign-categories/<int:id>/campaigns", methods=["GET"])
 @authenticated_only
