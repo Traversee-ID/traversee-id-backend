@@ -380,7 +380,9 @@ def get_campaigns_by_category(id):
     campaigns = db.session.query(Campaign) \
         .filter_by(category_id=id) \
         .order_by(Campaign.created_at.desc()).all()
-    return {"data": campaigns}, 200
+    
+    user_id = request.user.get("user_id")
+    return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
 
 @app.route("/campaign-categories", methods=["GET"])
 @authenticated_only
