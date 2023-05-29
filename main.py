@@ -198,7 +198,7 @@ class Campaign(db.Model):
     def status(self):
         if self._start_date > date.today():
             return "Coming Soon"
-        if self._end_date <= date.today():
+        if self._end_date >= date.today():
             return "Ongoing"
         return "Completed"
     
