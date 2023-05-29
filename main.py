@@ -247,6 +247,15 @@ class CampaignDetails(db.Model):
     def initiator_name(self):
         initiator = auth.get_user(uid=self.initiator_id)
         return initiator.display_name
+    
+    def serialize(self, user_id, campaign_id):
+        participant = db.session.query(CampaignParticipant) \
+            .filter_by(user_id=user_id, campaign_id=campaign_id).first()
+        submission_url = participant.submission_url if participant is not None else None
+        return {
+            "campaign_detail": self,
+            "submission_url": submission_url
+        }
 
 @dataclass
 class CampaignWinner(db.Model):
@@ -368,7 +377,9 @@ def get_campaign_detail(id):
         .filter_by(campaign_id=id).first()
     if not campaign_detail:
         return {"message": f"Campaign with id {id} doesn't exist"}, 404
-    return {"data": campaign_detail}, 200
+    
+    user_id = request.user.get("user_id")
+    return {"data": campaign_detail.serialize(user_id, id)}, 200
 
 @app.route("/campaign-categories/<int:id>/campaigns", methods=["GET"])
 @authenticated_only
