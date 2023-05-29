@@ -272,6 +272,28 @@ class CampaignCategory(db.Model):
     name: str = db.Column(db.String(100), unique=True, nullable=False)
     image_url: str = db.Column(db.String, nullable=False)
 
+@app.route("/users/<string:id>/campaigns", methods=["GET"])
+@authenticated_only
+def get_registred_campaigns(id):
+    campaigns_participant = db.session.query(CampaignParticipant.campaign_id) \
+        .filter_by(user_id=id).all()
+    campaigns_id = [campaign_id[0] for campaign_id in campaigns_participant]
+
+    page = request.args.get("page")
+
+    if page is not None and page.isdecimal():
+        campaigns = db.session.query(Campaign) \
+            .filter(Campaign.id.in_(campaigns_id)) \
+            .order_by(Campaign.created_at.desc()) \
+            .paginate(page=int(page), per_page=5, error_out=False)
+    else:
+        campaigns = db.session.query(Campaign) \
+            .filter(Campaign.id.in_(campaigns_id)) \
+            .order_by(Campaign.created_at.desc()).all()
+
+    user_id = request.user.get("user_id")
+    return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
+
 @app.route("/campaigns", methods=["GET"])
 @authenticated_only
 def get_campaigns():
