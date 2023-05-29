@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from firebase_admin import initialize_app
+from firebase_admin import auth, initialize_app
 from credentials import credentials
 from flask_sqlalchemy import SQLAlchemy
 from os import getenv
@@ -234,12 +234,19 @@ class Campaign(db.Model):
 class CampaignDetails(db.Model):
     __tablename__ = "campaign_details"
 
+    initiator_name: str
+
     id = db.Column(db.Integer, primary_key=True)
     initiator_id = db.Column(db.String, nullable=False)
     description: str = db.Column(db.Text, nullable=False)
     terms: str = db.Column(db.Text, nullable=False)
     mission: str = db.Column(db.Text, nullable=False)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), nullable=False)
+
+    @property
+    def initiator_name(self):
+        initiator = auth.get_user(uid=self.initiator_id)
+        return initiator.display_name
 
 @dataclass
 class CampaignWinner(db.Model):
