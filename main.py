@@ -261,9 +261,17 @@ class CampaignDetails(db.Model):
 class CampaignWinner(db.Model):
     __tablename__ = "campaign_winners"
 
+    submission_url: str
+
     user_id: str = db.Column(db.String, primary_key=True)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), primary_key=True)
     position: int = db.Column(db.Integer, nullable=False)
+
+    @property
+    def submission_url(self):
+        submission_url = db.session.query(CampaignParticipant.submission_url) \
+              .filter_by(user_id=self.user_id, campaign_id=self.campaign_id).first()
+        return submission_url[0] if submission_url is not None else None
 
 @dataclass
 class CampaignParticipant(db.Model):
