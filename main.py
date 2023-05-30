@@ -53,7 +53,16 @@ class Comment(db.Model):
 
 @app.route("/forums")
 def get_forums():
-    forums = db.session.query(Forum).order_by(Forum.created_at.desc()).all()
+    page = request.args.get("page")
+
+    if page is not None and page.isdecimal():
+        forums = db.session.query(Forum) \
+            .order_by(Forum.created_at.desc()) \
+            .paginate(page=int(page), per_page=5, error_out=False).items
+
+    else:
+        forums = db.session.query(Forum).order_by(Forum.created_at.desc()).all()
+    
     return {"data": forums}, 200
 
 @app.route("/forums", methods = ['POST'])
@@ -144,14 +153,20 @@ def create_forum_comments(id):
 @app.route('/forums/<int:id>/comments', methods=["GET"])
 @authenticated_only
 def get_forum_comments(id):
+    page = request.args.get("page")
     forum = db.session.get(Forum, id)
-    if not forum:
-        return {"message": f"Forum with id {id} doesn't exist"}, 404
 
-    comments = db.session.query(Comment) \
-        .filter_by(forum_id=forum.id) \
-        .order_by(Comment.created_at.desc()).all()
-    
+    if page is not None and page.isdecimal():
+        comments = db.session.query(Comment) \
+            .filter_by(forum_id=forum.id) \
+            .order_by(Comment.created_at.desc()) \
+            .paginate(page=int(page), per_page=10, error_out=False).items
+
+    else:
+        comments = db.session.query(Comment) \
+            .filter_by(forum_id=forum.id) \
+            .order_by(Comment.created_at.desc()).all()
+
     return {"data": comments}, 200
 
 @app.route('/forums/<int:id>/comments/<int:comment_id>', methods=["DELETE"])
