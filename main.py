@@ -439,9 +439,17 @@ def get_campaigns_by_category(id):
     if not category:
         return {"message": f"Category with id {id} doesn't exist"}, 404
     
-    campaigns = db.session.query(Campaign) \
-        .filter_by(category_id=id) \
-        .order_by(Campaign._end_date.desc(), Campaign._start_date.asc()).all()
+    page = request.args.get("page")
+
+    if page is not None and page.isdecimal():
+        campaigns = db.session.query(Campaign) \
+            .filter_by(category_id=id) \
+            .order_by(Campaign._end_date.desc(), Campaign._start_date.asc()) \
+            .paginate(page=int(page), per_page=5, error_out=False)
+    else:
+        campaigns = db.session.query(Campaign) \
+            .filter_by(category_id=id) \
+            .order_by(Campaign._end_date.desc(), Campaign._start_date.asc()).all()
     
     user_id = request.user.get("user_id")
     return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
