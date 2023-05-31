@@ -305,6 +305,17 @@ class CampaignCategory(db.Model):
     name: str = db.Column(db.String(100), unique=True, nullable=False)
     image_url: str = db.Column(db.String, nullable=False)
 
+def get_campaign_filters(status):
+    filters = []
+    if status == "ongoing":
+        filters = [Campaign._start_date <= date.today(), Campaign._end_date >= date.today()]
+    elif status == "coming-soon":
+        filters = [Campaign._start_date > date.today(), Campaign._end_date > date.today()]
+    elif status == "completed":
+        filters = [Campaign._start_date < date.today(), Campaign._end_date < date.today()]
+    
+    return filters
+
 @app.route("/users/<string:id>/campaigns", methods=["GET"])
 @authenticated_only
 def get_registred_campaigns(id):
@@ -336,14 +347,18 @@ def get_registred_campaigns(id):
 @authenticated_only
 def get_campaigns():
     page = request.args.get("page")
+    status = request.args.get("status")
+    orders = Campaign._end_date.desc(), Campaign._start_date.asc()
 
     if page is not None and page.isdecimal():
         campaigns = db.session.query(Campaign) \
-            .order_by(Campaign._end_date.desc(), Campaign._start_date.asc()) \
+            .filter(*get_campaign_filters(status)) \
+            .order_by(*orders) \
             .paginate(page=int(page), per_page=5, error_out=False)
     else:
         campaigns = db.session.query(Campaign) \
-            .order_by(Campaign._end_date.desc(), Campaign._start_date.asc()).all()
+            .filter(*get_campaign_filters(status)) \
+            .order_by(*orders).all()
 
     user_id = request.user.get("user_id")
     return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
@@ -440,16 +455,18 @@ def get_campaigns_by_category(id):
         return {"message": f"Category with id {id} doesn't exist"}, 404
     
     page = request.args.get("page")
+    status = request.args.get("status")
+    orders = Campaign._end_date.desc(), Campaign._start_date.asc()
 
     if page is not None and page.isdecimal():
         campaigns = db.session.query(Campaign) \
-            .filter_by(category_id=id) \
-            .order_by(Campaign._end_date.desc(), Campaign._start_date.asc()) \
+            .filter(*get_campaign_filters(status), Campaign.category_id==id) \
+            .order_by(*orders) \
             .paginate(page=int(page), per_page=5, error_out=False)
     else:
         campaigns = db.session.query(Campaign) \
-            .filter_by(category_id=id) \
-            .order_by(Campaign._end_date.desc(), Campaign._start_date.asc()).all()
+            .filter(*get_campaign_filters(status), Campaign.category_id==id) \
+            .order_by(*orders).all()
     
     user_id = request.user.get("user_id")
     return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
