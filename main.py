@@ -277,6 +277,8 @@ class CampaignWinner(db.Model):
     __tablename__ = "campaign_winners"
 
     submission_url: str
+    user_display_name: str
+    user_profile_image: str
 
     user_id: str = db.Column(db.String, primary_key=True)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), primary_key=True)
@@ -287,15 +289,38 @@ class CampaignWinner(db.Model):
         submission_url = db.session.query(CampaignParticipant.submission_url) \
               .filter_by(user_id=self.user_id, campaign_id=self.campaign_id).first()
         return submission_url[0] if submission_url is not None else None
+    
+    @property
+    def user_display_name(self):
+        user = auth.get_user(uid=self.user_id)
+        return user.display_name
+    
+    @property
+    def user_profile_image(self):
+        user = auth.get_user(uid=self.user_id)
+        return user.photo_url
 
 @dataclass
 class CampaignParticipant(db.Model):
     __tablename__ = "campaign_participants"
 
+    user_display_name: str
+    user_profile_image: str
+
     user_id: str = db.Column(db.String, primary_key=True)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaigns.id'), primary_key=True)
     submission_url: str = db.Column(db.String)
     created_at = db.Column(db.DateTime, default=db.func.now(), nullable=False)
+
+    @property
+    def user_display_name(self):
+        user = auth.get_user(uid=self.user_id)
+        return user.display_name
+    
+    @property
+    def user_profile_image(self):
+        user = auth.get_user(uid=self.user_id)
+        return user.photo_url
 
 @dataclass
 class CampaignCategory(db.Model):
