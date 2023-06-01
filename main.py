@@ -195,12 +195,13 @@ class Campaign(db.Model):
     start_date: str
     end_date: str
     category_name: str
+    location_name: str
     total_participants: int
 
     id: int = db.Column(db.Integer, primary_key=True)
     name: str = db.Column(db.String(100), nullable=False)
     image_url: str = db.Column(db.String, nullable=False)
-    place: str = db.Column(db.String, nullable=False)
+    location_id = db.Column(db.Integer, db.ForeignKey('campaign_locations.id'), nullable=False)
     _start_date = db.Column("start_date", db.Date, nullable=False)
     _end_date = db.Column("end_date", db.Date, nullable=False)
     category_id: int = db.Column(db.Integer, db.ForeignKey('campaign_categories.id'), nullable=False)
@@ -228,6 +229,10 @@ class Campaign(db.Model):
     @property
     def category_name(self):
         return db.session.get(CampaignCategory, self.category_id).name
+    
+    @property
+    def location_name(self):
+        return db.session.get(CampaignLocation, self.location_id).name
     
     @property
     def total_participants(self):
@@ -271,6 +276,14 @@ class CampaignDetails(db.Model):
             "campaign_detail": self,
             "submission_url": submission_url
         }
+    
+@dataclass
+class CampaignLocation(db.Model):
+    __tablename__ = "campaign_locations"
+
+    id: int = db.Column(db.Integer, primary_key=True)
+    name: str = db.Column(db.String(100), nullable=False)
+    campaigns = db.relationship("Campaign", uselist=True)
 
 @dataclass
 class CampaignWinner(db.Model):
@@ -471,6 +484,37 @@ def get_campaign_participants(id):
         .order_by(CampaignParticipant.created_at.asc()).all()
     
     return {"data": [{"winners": campaign_winners}, {"other_participants": campaign_participants}]}, 200
+
+@app.route("/campaign-locations/<int:id>/campaigns", methods=["GET"])
+@authenticated_only
+def get_campaigns_by_location(id):
+    location = db.session.get(CampaignLocation, id)
+    if not location:
+        return {"message": f"Location with id {id} doesn't exist"}, 404
+    
+    page = request.args.get("page")
+    status = request.args.get("status")
+    orders = Campaign._end_date.desc(), Campaign._start_date.asc()
+
+    if page is not None and page.isdecimal():
+        campaigns = db.session.query(Campaign) \
+            .filter(*get_campaign_filters(status), Campaign.location_id==id) \
+            .order_by(*orders) \
+            .paginate(page=int(page), per_page=5, error_out=False)
+    else:
+        campaigns = db.session.query(Campaign) \
+            .filter(*get_campaign_filters(status), Campaign.location_id==id) \
+            .order_by(*orders).all()
+    
+    user_id = request.user.get("user_id")
+    return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
+
+@app.route("/campaign-locations", methods=["GET"])
+@authenticated_only
+def get_campaign_locations():
+    locations = db.session.query(CampaignLocation) \
+        .order_by(CampaignLocation.name.asc()).all()
+    return {"data": locations}, 200
 
 @app.route("/campaign-categories/<int:id>/campaigns", methods=["GET"])
 @authenticated_only
