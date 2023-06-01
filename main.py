@@ -364,7 +364,8 @@ def get_campaign_filters(status, location_id):
     elif status == "completed":
         filters = [Campaign._start_date < date.today(), Campaign._end_date < date.today()]
 
-    if location_id is not None and location_id.isdecimal():
+    if location_id is not None:
+        location_id = int(location_id) if location_id.isdecimal() else None
         filters.append(Campaign.location_id == location_id)
     
     return filters
