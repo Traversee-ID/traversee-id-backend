@@ -305,13 +305,19 @@ class CampaignWinner(db.Model):
     
     @property
     def user_display_name(self):
-        user = auth.get_user(uid=self.user_id)
-        return user.display_name
+        try:
+            user = auth.get_user(uid=self.user_id)
+            return user.display_name
+        except auth.UserNotFoundError:
+            return None
     
     @property
     def user_profile_image(self):
-        user = auth.get_user(uid=self.user_id)
-        return user.photo_url
+        try:
+            user = auth.get_user(uid=self.user_id)
+            return user.photo_url
+        except auth.UserNotFoundError:
+            return None
 
 @dataclass
 class CampaignParticipant(db.Model):
@@ -327,13 +333,19 @@ class CampaignParticipant(db.Model):
 
     @property
     def user_display_name(self):
-        user = auth.get_user(uid=self.user_id)
-        return user.display_name
+        try:
+            user = auth.get_user(uid=self.user_id)
+            return user.display_name
+        except auth.UserNotFoundError:
+            return None
     
     @property
     def user_profile_image(self):
-        user = auth.get_user(uid=self.user_id)
-        return user.photo_url
+        try:
+            user = auth.get_user(uid=self.user_id)
+            return user.photo_url
+        except auth.UserNotFoundError:
+            return None
 
 @dataclass
 class CampaignCategory(db.Model):
