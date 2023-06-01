@@ -22,6 +22,7 @@ class Forum(db.Model):
     total_comments: int
     user_display_name: str
     user_profile_image: str
+    created_date: str
 
     id: int = db.Column(db.Integer, primary_key=True)
     title: str = db.Column(db.String(100), nullable=False)
@@ -30,7 +31,7 @@ class Forum(db.Model):
     image_url: str = db.Column(db.String)
     comments = db.relationship('Comment', uselist=True)
     likes = db.relationship('ForumLike', uselist=True)
-    created_at: str = db.Column(db.DateTime, default=db.func.now())
+    created_at = db.Column(db.DateTime, default=db.func.now())
 
     @property
     def total_likes(self):
@@ -55,6 +56,10 @@ class Forum(db.Model):
             return user.photo_url
         except auth.UserNotFoundError:
             return None
+        
+    @property
+    def created_date(self):
+        return self.created_at.strftime("%d %B %Y")
         
     def serialize(self, user_id):
         forum_likes = db.session.query(ForumLike) \
@@ -81,6 +86,7 @@ class Comment(db.Model):
 
     user_display_name: str
     user_profile_image: str
+    created_date: str
 
     id: int = db.Column(db.Integer, primary_key=True)
     text: str = db.Column(db.String(300), nullable=False)
@@ -103,6 +109,10 @@ class Comment(db.Model):
             return user.photo_url
         except auth.UserNotFoundError:
             return None
+        
+    @property
+    def created_date(self):
+        return self.created_at.strftime("%d %B %Y")
 
 @app.route("/forums")
 @authenticated_only
