@@ -681,6 +681,18 @@ class Tourism(db.Model):
     @property
     def location_name(self):
         return db.session.get(TourismLocation, self.location_id).name
+    
+    def serialize(self, user_id):
+        tourism = db.session.query(TourismFavorite) \
+            .filter_by(user_id=user_id, tourism_id=self.id).first()
+        return {
+            "tourism": self,
+            "is_favorite": tourism != None
+        }
+    
+    @staticmethod
+    def serialize_list(user_id, tourisms):
+        return [tourism.serialize(user_id) for tourism in tourisms]
 
 @dataclass
 class TourismDetail(db.Model):
@@ -688,14 +700,6 @@ class TourismDetail(db.Model):
 
     tourism_id = db.Column(db.Integer, db.ForeignKey('tourisms.id'), primary_key=True)
     description: str = db.Column(db.Text, nullable=False)
-
-    def serialize(self, user_id):
-        tourism = db.session.query(TourismFavorite) \
-            .filter_by(user_id=user_id, tourism_id=self.tourism_id).first()
-        return {
-            "description": self.description,
-            "is_favorite": tourism != None
-        }
 
 @dataclass
 class TourismFavorite(db.Model):
@@ -763,13 +767,13 @@ def get_tourisms():
         tourisms = db.session.query(Tourism) \
             .filter(*get_tourism_filters(location_id, category_id, is_favorite, user_id)) \
             .order_by(Tourism.name.asc()) \
-            .paginate(page=int(page), per_page=5, error_out=False).items
+            .paginate(page=int(page), per_page=5, error_out=False)
     else:
         tourisms = db.session.query(Tourism) \
             .filter(*get_tourism_filters(location_id, category_id, is_favorite, user_id)) \
             .order_by(Tourism.name.asc()).all()
 
-    return {"data": tourisms}, 200
+    return {"data": Tourism.serialize_list(user_id, tourisms)}, 200
 
 @app.route("/tourisms/<int:id>", methods=["GET"])
 @authenticated_only
@@ -778,7 +782,8 @@ def get_tourism(id):
     if not tourism:
         return {"message": f"Tourism with id {id} doesn't exist"}, 404
     
-    return {"data": tourism}, 200
+    user_id = request.user.get("user_id")
+    return {"data": tourism.serialize(user_id)}, 200
 
 @app.route("/tourisms/<int:id>/favorites", methods=["POST"])
 @authenticated_only
@@ -796,7 +801,7 @@ def create_tourism_favorite(id):
     db.session.add(tourism_favorites)
     db.session.commit()
 
-    return {"data": tourism}, 200
+    return {"data": tourism.serialize(user_id)}, 200
 
 @app.route("/tourisms/<int:id>/favorites", methods=["DELETE"])
 @authenticated_only
@@ -813,7 +818,7 @@ def delete_tourism_favorite(id):
     db.session.delete(tourism_favorites)
     db.session.commit()
 
-    return {"data": tourism}, 200
+    return {"data": tourism.serialize(user_id)}, 200
 
 @app.route("/tourisms/<int:id>/details", methods=["GET"])
 @authenticated_only
@@ -823,8 +828,7 @@ def get_tourism_details(id):
         return {"message": f"Tourism with id {id} doesn't exist"}, 404
     
     tourism_details = db.session.get(TourismDetail, tourism.id)
-    user_id = request.user.get("uid")
-    return {"data": tourism_details.serialize(user_id)}, 200
+    return {"data": tourism_details}, 200
 
 @app.route("/tourism-categories", methods=["GET"])
 @authenticated_only
