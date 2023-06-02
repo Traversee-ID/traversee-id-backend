@@ -660,6 +660,67 @@ def get_campaign_category(id):
         return {"message": f"Category with id {id} doesn't exist"}, 404
     return {"data": category}, 200
 
+@dataclass
+class Tourism(db.Model):
+    __tablename__ = "tourisms"
+
+    category_name: str
+    location_name: str
+
+    id: int = db.Column(db.Integer, primary_key=True)
+    name: str = db.Column(db.String(150), nullable=False)
+    image_url: str = db.Column(db.String(150), nullable=False)
+    location_id = db.Column(db.Integer, db.ForeignKey('tourism_locations.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('tourism_categories.id'), nullable=False)
+    description = db.relationship("TourismDetail", uselist=False)
+
+    @property
+    def category_name(self):
+        return db.session.get(TourismCategory, self.category_id).name
+    
+    @property
+    def location_name(self):
+        return db.session.get(TourismLocation, self.location_id).name
+
+@dataclass
+class TourismDetail(db.Model):
+    __tablename__ = "tourism_details"
+
+    tourism_id = db.Column(db.Integer, db.ForeignKey('tourisms.id'), primary_key=True)
+    description: str = db.Column(db.Text, nullable=False)
+
+    def serialize(self, user_id):
+        tourism = db.session.query(TourismFavorite) \
+            .filter_by(user_id=user_id, tourism_id=self.tourism_id).first()
+        return {
+            "description": self.description,
+            "is_favorite": tourism != None
+        }
+
+@dataclass
+class TourismFavorite(db.Model):
+    __tablename__ = "tourism_favorites"
+
+    user_id = db.Column(db.String, primary_key=True)
+    tourism_id = db.Column(db.Integer, db.ForeignKey('tourisms.id'), primary_key=True)
+
+@dataclass
+class TourismLocation(db.Model):
+    __tablename__ = "tourism_locations"
+
+    id: int = db.Column(db.Integer, primary_key=True)
+    name: str = db.Column(db.String(100), nullable=False)
+    tourisms = db.relationship("Tourism", uselist=True)
+
+@dataclass
+class TourismCategory(db.Model):
+    __tablename__ = "tourism_categories"
+
+    id: int = db.Column(db.Integer, primary_key=True)
+    name: str = db.Column(db.String(100), unique=True, nullable=False)
+    image_url: str = db.Column(db.String(150), nullable=False)
+    tourisms = db.relationship("Tourism", uselist=True)
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
