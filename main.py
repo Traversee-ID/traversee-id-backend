@@ -63,9 +63,11 @@ class Forum(db.Model):
     def serialize(self, user_id):
         forum_likes = db.session.query(ForumLike) \
             .filter_by(forum_id=self.id, user_id=user_id).first()
+        forum_campaign = db.session.get(ForumCampaign, self.id)
         return {
             "forum": self,
-            "is_liked": forum_likes != None
+            "is_liked": forum_likes != None,
+            "campaign_id": forum_campaign.campaign_id if forum_campaign else None
         }
     
     @staticmethod
@@ -78,6 +80,13 @@ class ForumLike(db.Model):
 
     forum_id: int = db.Column(db.ForeignKey('forums.id'), primary_key=True)
     user_id: str = db.Column(db.String, primary_key=True)
+
+@dataclass
+class ForumCampaign(db.Model):
+    __tablename__ = "forum_campaigns"
+
+    forum_id: int = db.Column(db.ForeignKey('forums.id'), primary_key=True)
+    campaign_id: int = db.Column(db.ForeignKey('campaign.id'), nullable=False)
 
 @dataclass
 class Comment(db.Model):
