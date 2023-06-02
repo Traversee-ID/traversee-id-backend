@@ -2,7 +2,6 @@ from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from firebase_admin import auth, initialize_app
 from credentials import credentials
-from flask_sqlalchemy import SQLAlchemy
 from os import getenv
 from authentication import authenticated_only
 from dataclasses import dataclass
@@ -420,7 +419,7 @@ class CampaignCategory(db.Model):
     name: str = db.Column(db.String(100), unique=True, nullable=False)
     image_url: str = db.Column(db.String, nullable=False)
 
-def get_campaign_filters(status, location_id):
+def get_campaign_filters(status, location_id, user_id, is_registered):
     filters = []
     if status == "ongoing":
         filters = [Campaign._start_date <= date.today(), Campaign._end_date >= date.today()]
@@ -432,6 +431,16 @@ def get_campaign_filters(status, location_id):
     if location_id is not None:
         location_id = int(location_id) if location_id.isdecimal() else None
         filters.append(Campaign.location_id == location_id)
+
+    if is_registered is not None:
+        campaigns_participant = db.session.query(CampaignParticipant.campaign_id) \
+            .filter_by(user_id=user_id).all()
+        campaigns_id = [campaign_id[0] for campaign_id in campaigns_participant]
+        
+        if is_registered == "true":
+            filters.append(Campaign.id.in_(campaigns_id))
+        elif is_registered == "false":
+            filters.append(Campaign.id.notin_(campaigns_id))
     
     return filters
 
@@ -471,16 +480,18 @@ def get_campaigns():
     page = request.args.get("page")
     status = request.args.get("status")
     location_id = request.args.get("location_id")
+    is_registered = request.args.get("is_registered")
+    user_id = request.user.get("uid")
     orders = Campaign._end_date.desc(), Campaign._start_date.asc()
 
     if page is not None and page.isdecimal():
         campaigns = db.session.query(Campaign) \
-            .filter(*get_campaign_filters(status, location_id)) \
+            .filter(*get_campaign_filters(status, location_id, user_id, is_registered)) \
             .order_by(*orders) \
             .paginate(page=int(page), per_page=5, error_out=False)
     else:
         campaigns = db.session.query(Campaign) \
-            .filter(*get_campaign_filters(status, location_id)) \
+            .filter(*get_campaign_filters(status, location_id, user_id, is_registered)) \
             .order_by(*orders).all()
 
     user_id = request.user.get("user_id")
@@ -587,19 +598,20 @@ def get_campaigns_by_category(id):
     page = request.args.get("page")
     status = request.args.get("status")
     location_id = request.args.get("location_id")
+    is_registered = request.args.get("is_registered")
+    user_id = request.user.get("uid")
     orders = Campaign._end_date.desc(), Campaign._start_date.asc()
 
     if page is not None and page.isdecimal():
         campaigns = db.session.query(Campaign) \
-            .filter(*get_campaign_filters(status, location_id), Campaign.category_id==id) \
+            .filter(*get_campaign_filters(status, location_id, user_id, is_registered), Campaign.category_id==id) \
             .order_by(*orders) \
             .paginate(page=int(page), per_page=5, error_out=False)
     else:
         campaigns = db.session.query(Campaign) \
-            .filter(*get_campaign_filters(status, location_id), Campaign.category_id==id) \
+            .filter(*get_campaign_filters(status, location_id, user_id, is_registered), Campaign.category_id==id) \
             .order_by(*orders).all()
     
-    user_id = request.user.get("user_id")
     return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
 
 @app.route("/campaign-categories", methods=["GET"])
