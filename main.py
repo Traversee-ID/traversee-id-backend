@@ -141,14 +141,19 @@ def create_forum():
     forum = Forum(title=title, text=text, author_id=request.user.get('user_id'))
     db.session.add(forum)
     db.session.commit()
-    return {"data": forum}, 200
+
+    user_id = request.user.get("user_id")
+    return {"data": forum.serialize(user_id)}, 200
 
 @app.route('/forums/<int:id>')
+@authenticated_only
 def get_forum(id):
     forum = db.session.get(Forum, id)
     if not forum:
         return {"message": f"Forum with id {id} doesn't exist"}, 404
-    return {"data": forum}, 200
+    
+    user_id = request.user.get("user_id")
+    return {"data": forum.serialize(user_id)}, 200
 
 @app.route('/forums/<int:id>', methods=["DELETE"])
 @authenticated_only
