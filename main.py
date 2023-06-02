@@ -701,8 +701,8 @@ class TourismDetail(db.Model):
 class TourismFavorite(db.Model):
     __tablename__ = "tourism_favorites"
 
-    user_id = db.Column(db.String, primary_key=True)
     tourism_id = db.Column(db.Integer, db.ForeignKey('tourisms.id'), primary_key=True)
+    user_id = db.Column(db.String, primary_key=True)
 
 @dataclass
 class TourismLocation(db.Model):
@@ -778,6 +778,41 @@ def get_tourism(id):
     if not tourism:
         return {"message": f"Tourism with id {id} doesn't exist"}, 404
     
+    return {"data": tourism}, 200
+
+@app.route("/tourisms/<int:id>/favorites", methods=["POST"])
+@authenticated_only
+def create_tourism_favorite(id):
+    tourism = db.session.get(Tourism, id)
+    if not tourism:
+        return {"message": f"Tourism with id {id} doesn't exist"}, 404
+    
+    user_id = request.user.get("user_id")
+    tourism_favorites = db.session.get(TourismFavorite, (tourism.id, user_id))
+    if tourism_favorites:
+        return {"message": f"Tourism {id} is already in favorites"}, 409
+    
+    tourism_favorites = TourismFavorite(tourism_id=tourism.id, user_id=user_id)
+    db.session.add(tourism_favorites)
+    db.session.commit()
+
+    return {"data": tourism}, 200
+
+@app.route("/tourisms/<int:id>/favorites", methods=["DELETE"])
+@authenticated_only
+def delete_tourism_favorite(id):
+    tourism = db.session.get(Tourism, id)
+    if not tourism:
+        return {"message": f"Tourism with id {id} doesn't exist"}, 404
+    
+    user_id = request.user.get("user_id")
+    tourism_favorites = db.session.get(TourismFavorite, (tourism.id, user_id))
+    if not tourism_favorites:
+        return {"message": f"Tourism {id} isn't a favorite yet"}, 409
+    
+    db.session.delete(tourism_favorites)
+    db.session.commit()
+
     return {"data": tourism}, 200
 
 @app.route("/tourisms/<int:id>/details", methods=["GET"])
