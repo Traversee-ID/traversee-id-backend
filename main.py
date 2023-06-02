@@ -721,6 +721,20 @@ class TourismCategory(db.Model):
     image_url: str = db.Column(db.String(150), nullable=False)
     tourisms = db.relationship("Tourism", uselist=True)
 
+@app.route("/tourism-categories", methods=["GET"])
+@authenticated_only
+def get_tourism_categories():
+    categories = db.session.query(TourismCategory) \
+        .order_by(TourismCategory.name.asc()).all()
+    return {"data": categories}, 200
+
+@app.route("/tourism-locations", methods=["GET"])
+@authenticated_only
+def get_tourism_locations():
+    locations = db.session.query(TourismLocation) \
+        .order_by(TourismLocation.name.asc()).all()
+    return {"data": locations}, 200
+    
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
