@@ -152,8 +152,9 @@ def create_forum():
     db.session.add(forum)
     db.session.commit()
 
-    if campaign_id:
-        forum_campaign = ForumCampaign(forum_id=forum.id, campaign_id=campaign_id)
+    if campaign_id is not None and campaign_id.isdecimal():
+        campaign = db.session.get(Campaign, campaign_id)
+        forum_campaign = ForumCampaign(forum_id=forum.id, campaign_id=campaign.id)
         db.session.add(forum_campaign)
         db.session.commit()
 
