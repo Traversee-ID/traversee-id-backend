@@ -86,7 +86,7 @@ class ForumCampaign(db.Model):
     __tablename__ = "forum_campaigns"
 
     forum_id: int = db.Column(db.ForeignKey('forums.id'), primary_key=True)
-    campaign_id: int = db.Column(db.ForeignKey('campaign.id'), nullable=False)
+    campaign_id: int = db.Column(db.ForeignKey('campaigns.id'), nullable=False)
 
 @dataclass
 class Comment(db.Model):
@@ -143,6 +143,7 @@ def get_forums():
 def create_forum():
     title = request.json.get("title")
     text = request.json.get("text")
+    campaign_id = request.json.get("campaign_id")
 
     if not title or not text:
         return {"message": "Title and text are required"}, 400
@@ -150,6 +151,11 @@ def create_forum():
     forum = Forum(title=title, text=text, author_id=request.user.get('user_id'))
     db.session.add(forum)
     db.session.commit()
+
+    if campaign_id:
+        forum_campaign = ForumCampaign(forum_id=forum.id, campaign_id=campaign_id)
+        db.session.add(forum_campaign)
+        db.session.commit()
 
     user_id = request.user.get("user_id")
     return {"data": forum.serialize(user_id)}, 200
