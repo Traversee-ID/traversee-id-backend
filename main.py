@@ -349,10 +349,9 @@ class CampaignDetails(db.Model):
     def serialize(self, user_id, campaign_id):
         participant = db.session.query(CampaignParticipant) \
             .filter_by(user_id=user_id, campaign_id=campaign_id).first()
-        submission_url = participant.submission_url if participant is not None else None
         return {
             "campaign_detail": self,
-            "submission_url": submission_url
+            "submission_url": participant.submission_url if participant else None
         }
     
 @dataclass
@@ -379,7 +378,7 @@ class CampaignWinner(db.Model):
     def submission_url(self):
         submission_url = db.session.query(CampaignParticipant.submission_url) \
               .filter_by(user_id=self.user_id, campaign_id=self.campaign_id).first()
-        return submission_url[0] if submission_url is not None else None
+        return submission_url[0] if submission_url else None
     
     @property
     def user_display_name(self):
@@ -442,11 +441,11 @@ def get_campaign_filters(status, location_id, user_id, is_registered):
     elif status == "completed":
         filters = [Campaign._start_date < date.today(), Campaign._end_date < date.today()]
 
-    if location_id is not None:
+    if location_id:
         location_id = int(location_id) if location_id.isdecimal() else None
         filters.append(Campaign.location_id == location_id)
 
-    if is_registered is not None:
+    if is_registered:
         campaigns_participant = db.session.query(CampaignParticipant.campaign_id) \
             .filter_by(user_id=user_id).all()
         campaigns_id = [campaign_id[0] for campaign_id in campaigns_participant]
@@ -506,7 +505,7 @@ def get_campaigns():
     orders = Campaign._end_date.desc(), Campaign._start_date.asc()
 
     keyword_search = []
-    if search is not None:
+    if search:
         keyword_search = [Campaign.name.ilike(f'%{keyword}%') for keyword in search.split()]
 
     if page is not None and page.isdecimal():
@@ -624,7 +623,7 @@ def get_campaigns_by_category(id):
     orders = Campaign._end_date.desc(), Campaign._start_date.asc()
 
     keyword_search = []
-    if search is not None:
+    if search:
         keyword_search = [Campaign.name.ilike(f'%{keyword}%') for keyword in search.split()]
 
     if page is not None and page.isdecimal():
