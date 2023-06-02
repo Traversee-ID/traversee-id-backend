@@ -449,6 +449,17 @@ def get_campaign_filters(status, location_id, user_id, is_registered):
     
     return filters
 
+def get_campaign_query(request):
+    query = []
+    query.append(request.args.get("page"))
+    query.append(request.args.get("status"))
+    query.append(request.args.get("location_id"))
+    query.append(request.args.get("is_registered"))
+    query.append(request.user.get("uid"))
+    query.append(request.args.get("search"))
+
+    return query
+
 @app.route("/users/<string:id>/campaigns", methods=["GET"])
 @authenticated_only
 def get_registred_campaigns(id):
@@ -482,21 +493,21 @@ def get_registred_campaigns(id):
 @app.route("/campaigns", methods=["GET"])
 @authenticated_only
 def get_campaigns():
-    page = request.args.get("page")
-    status = request.args.get("status")
-    location_id = request.args.get("location_id")
-    is_registered = request.args.get("is_registered")
-    user_id = request.user.get("uid")
+    page, status, location_id, is_registered, user_id, search = get_campaign_query(request)
     orders = Campaign._end_date.desc(), Campaign._start_date.asc()
+
+    keyword_search = []
+    if search is not None:
+        keyword_search = [Campaign.name.ilike(f'%{keyword}%') for keyword in search.split()]
 
     if page is not None and page.isdecimal():
         campaigns = db.session.query(Campaign) \
-            .filter(*get_campaign_filters(status, location_id, user_id, is_registered)) \
+            .filter(*keyword_search, *get_campaign_filters(status, location_id, user_id, is_registered)) \
             .order_by(*orders) \
             .paginate(page=int(page), per_page=5, error_out=False)
     else:
         campaigns = db.session.query(Campaign) \
-            .filter(*get_campaign_filters(status, location_id, user_id, is_registered)) \
+            .filter(*keyword_search, *get_campaign_filters(status, location_id, user_id, is_registered)) \
             .order_by(*orders).all()
 
     user_id = request.user.get("user_id")
@@ -600,21 +611,21 @@ def get_campaigns_by_category(id):
     if not category:
         return {"message": f"Category with id {id} doesn't exist"}, 404
     
-    page = request.args.get("page")
-    status = request.args.get("status")
-    location_id = request.args.get("location_id")
-    is_registered = request.args.get("is_registered")
-    user_id = request.user.get("uid")
+    page, status, location_id, is_registered, user_id, search = get_campaign_query(request)
     orders = Campaign._end_date.desc(), Campaign._start_date.asc()
+
+    keyword_search = []
+    if search is not None:
+        keyword_search = [Campaign.name.ilike(f'%{keyword}%') for keyword in search.split()]
 
     if page is not None and page.isdecimal():
         campaigns = db.session.query(Campaign) \
-            .filter(*get_campaign_filters(status, location_id, user_id, is_registered), Campaign.category_id==id) \
+            .filter(*keyword_search, *get_campaign_filters(status, location_id, user_id, is_registered), Campaign.category_id==id) \
             .order_by(*orders) \
             .paginate(page=int(page), per_page=5, error_out=False)
     else:
         campaigns = db.session.query(Campaign) \
-            .filter(*get_campaign_filters(status, location_id, user_id, is_registered), Campaign.category_id==id) \
+            .filter(*keyword_search, *get_campaign_filters(status, location_id, user_id, is_registered), Campaign.category_id==id) \
             .order_by(*orders).all()
     
     return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
