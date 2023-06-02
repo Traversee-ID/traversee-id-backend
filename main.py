@@ -721,6 +721,76 @@ class TourismCategory(db.Model):
     image_url: str = db.Column(db.String(150), nullable=False)
     tourisms = db.relationship("Tourism", uselist=True)
 
+def get_tourism_filters(location_id, category_id, is_favorite, user_id):
+    filters = []
+
+    if location_id:
+        location_id = int(location_id) if location_id.isdecimal() else None
+        filters.append(Tourism.location_id == location_id)
+
+    if category_id:
+        category_id = int(category_id) if category_id.isdecimal() else None
+        filters.append(Tourism.category_id == category_id)
+
+    if is_favorite:
+        tourism_favorites = db.session.query(TourismFavorite.tourism_id) \
+            .filter_by(user_id=user_id).all()
+        tourism_id = [tourism[0] for tourism in tourism_favorites]
+        
+        if is_favorite == "true":
+            filters.append(Tourism.id.in_(tourism_id))
+        elif is_favorite == "false":
+            filters.append(Tourism.id.notin_(tourism_id))
+    
+    return filters
+
+def get_tourism_query(request):
+    query = []
+    query.append(request.args.get("page"))
+    query.append(request.args.get("location_id"))
+    query.append(request.args.get("category_id"))
+    query.append(request.args.get("is_favorite"))
+    query.append(request.user.get("uid"))
+
+    return query
+
+@app.route("/tourisms", methods=["GET"])
+@authenticated_only
+def get_tourisms():
+    page, location_id, category_id, is_favorite, user_id = get_tourism_query(request)
+
+    if page is not None and page.isdecimal():
+        tourisms = db.session.query(Tourism) \
+            .filter(*get_tourism_filters(location_id, category_id, is_favorite, user_id)) \
+            .order_by(Tourism.name.asc()) \
+            .paginate(page=int(page), per_page=5, error_out=False)
+    else:
+        tourisms = db.session.query(Tourism) \
+            .filter(*get_tourism_filters(location_id, category_id, is_favorite, user_id)) \
+            .order_by(Tourism.name.asc()).all()
+
+    return {"data": tourisms}, 200
+
+@app.route("/tourisms/<int:id>", methods=["GET"])
+@authenticated_only
+def get_tourism(id):
+    tourism = db.session.get(Tourism, id)
+    if not tourism:
+        return {"message": f"Tourism with id {id} doesn't exist"}, 404
+    
+    return {"data": tourism}, 200
+
+@app.route("/tourisms/<int:id>/details", methods=["GET"])
+@authenticated_only
+def get_tourism_details(id):
+    tourism = db.session.get(Tourism, id)
+    if not tourism:
+        return {"message": f"Tourism with id {id} doesn't exist"}, 404
+    
+    tourism_details = db.session.get(TourismDetail, tourism.id)
+    user_id = request.user.get("uid")
+    return {"data": tourism_details.serialize(user_id)}, 200
+
 @app.route("/tourism-categories", methods=["GET"])
 @authenticated_only
 def get_tourism_categories():
