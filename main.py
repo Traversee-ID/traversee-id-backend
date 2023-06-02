@@ -763,7 +763,7 @@ def get_tourisms():
         tourisms = db.session.query(Tourism) \
             .filter(*get_tourism_filters(location_id, category_id, is_favorite, user_id)) \
             .order_by(Tourism.name.asc()) \
-            .paginate(page=int(page), per_page=5, error_out=False)
+            .paginate(page=int(page), per_page=5, error_out=False).items
     else:
         tourisms = db.session.query(Tourism) \
             .filter(*get_tourism_filters(location_id, category_id, is_favorite, user_id)) \
