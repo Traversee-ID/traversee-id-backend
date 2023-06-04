@@ -60,6 +60,7 @@ class TripDestination(db.Model):
     trip_id: int = db.Column(db.Integer, db.ForeignKey('open_trips.id'), nullable=False)
 
 @app.route('/open_trip')
+@authenticated_only
 def get_trips():
     page = request.args.get("page")
 
@@ -74,6 +75,7 @@ def get_trips():
     return {"data": trips}, 200
 
 @app.route('/open_trip', methods = ['POST'])
+@authenticated_only
 def create_trip():
     title = request.json.get("title")
     description = request.json.get("description")
@@ -97,6 +99,7 @@ def create_trip():
     return {"data": trip}, 200
 
 @app.route('/open_trip/<int:id>')
+@authenticated_only
 def get_trip(id):
     trip = db.session.get(OpenTrip, id)
     if not trip:
@@ -105,6 +108,7 @@ def get_trip(id):
     return {"data": trip}, 200
 
 @app.route('/open_trip/<int:id>', methods=["DELETE"])
+@authenticated_only
 def delete_trip(id):
     trip = db.session.get(OpenTrip, id)
     if not trip:
@@ -115,6 +119,7 @@ def delete_trip(id):
     return {"message": f"Open trip with id {id} deleted"}, 200
 
 @app.route('/open_trip/<int:id>/destinations')
+@authenticated_only
 def get_destinations(id):
     trip = db.session.get(OpenTrip, id)
     if not trip:
@@ -125,6 +130,7 @@ def get_destinations(id):
     return {"data": destinations}, 200
 
 @app.route('/open_trip/<int:id>/destinations' , methods=["POST"])
+@authenticated_only
 def post_destination(id):
     name = request.json.get("name")
     location_name = request.json.get("location_name")
@@ -146,6 +152,7 @@ def post_destination(id):
     return {"data": destination}, 200
 
 @app.route('/open_trip/<int:id>/destinations/<int:destination_id>', methods=["DELETE"])
+@authenticated_only
 def delete_destination(id, destination_id):
     trip = db.session.get(OpenTrip, id)
     if not trip:
