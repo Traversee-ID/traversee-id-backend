@@ -209,11 +209,20 @@ class Forum(db.Model):
     def serialize(self, user_id):
         forum_likes = db.session.query(ForumLike) \
             .filter_by(forum_id=self.id, user_id=user_id).first()
+
         forum_campaign = db.session.get(ForumCampaign, self.id)
+        campaign = db.session.get(Campaign, forum_campaign.campaign_id) if forum_campaign else None
+        campaign_extracted = {
+            "id": campaign.id,
+            "name": campaign.name,
+            "category": campaign.category_name,
+            "image_url": campaign.image_url
+            } if campaign else None
+
         return {
             "forum": self,
             "is_liked": forum_likes != None,
-            "campaign_id": forum_campaign.campaign_id if forum_campaign else None
+            "campaign": campaign_extracted
         }
     
     @staticmethod
