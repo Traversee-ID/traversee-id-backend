@@ -1,9 +1,10 @@
 from firebase_admin import auth
 from flask import request
 from functools import wraps
+from .helper import parse_credentials
 
-def authenticated_only(f):
-    @wraps(f)
+def authenticated_only(func):
+    @wraps(func)
     def wrap(*args, **kwargs):
         if not request.headers.get("Authorization"):
             return {"message": "No credentials provided."}, 401
@@ -13,11 +14,5 @@ def authenticated_only(f):
             request.user = user
         except:
             return {"message": "Invalid token provided."}, 401
-        return f(*args, **kwargs)
+        return func(*args, **kwargs)
     return wrap
-
-def parse_credentials(credentials):
-    credential_list = credentials.split(" ")
-    if len(credential_list) != 2:
-        return None, None
-    return credential_list
