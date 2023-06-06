@@ -50,6 +50,14 @@ class TourismFavorite(db.Model):
     user_id = db.Column(db.String, primary_key=True)
 
 @dataclass
+class TourismUserClick(db.Model):
+    __tablename__ = "tourism_user_clicks"
+
+    tourism_id: str = db.Column(db.String(30), db.ForeignKey('tourisms.id'), primary_key=True)
+    user_id: str = db.Column(db.String, primary_key=True)
+    total_click: int = db.Column(db.Integer, nullable=False)
+
+@dataclass
 class TourismLocation(db.Model):
     __tablename__ = "tourism_locations"
 

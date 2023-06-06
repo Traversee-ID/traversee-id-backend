@@ -107,6 +107,15 @@ def get_tourism_details(id):
     if not tourism:
         return {"message": f"Tourism with id {id} doesn't exist"}, 404
     
+    user_id = request.user.get("uid")
+    user_click = db.session.get(TourismUserClick, (tourism.id, user_id))
+    if not user_click:
+        user_click = TourismUserClick(tourism_id = tourism.id, user_id=user_id, total_click=0)
+
+    user_click.total_click += 1
+    db.session.add(user_click)
+    db.session.commit()
+    
     tourism_details = db.session.get(TourismDetail, tourism.id)
     return {"data": tourism_details}, 200
 
