@@ -19,7 +19,7 @@ def get_forums():
     else:
         forums = db.session.query(Forum).order_by(Forum.created_at.desc()).all()
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     return {"data": Forum.serialize_list(user_id, forums)}, 200
 
 @forums.route("/forums", methods = ['POST'])
@@ -44,7 +44,7 @@ def create_forum():
         db.session.add(forum_campaign)
         db.session.commit()
 
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     return {"data": forum.serialize(user_id)}, 200
 
 @forums.route('/forums/<int:id>')
@@ -54,7 +54,7 @@ def get_forum(id):
     if not forum:
         return {"message": f"Forum with id {id} doesn't exist"}, 404
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     return {"data": forum.serialize(user_id)}, 200
 
 @forums.route('/forums/<int:id>', methods=["DELETE"])
@@ -64,7 +64,7 @@ def delete_forum(id):
     if not forum:
         return {"message": f"Forum with id {id} doesn't exist"}, 404
     
-    if forum.author_id != request.user.get("user_id"):
+    if forum.author_id != request.user.get("uid"):
         return {"message": f"You're not author of the forum with id {id}"}, 403
     
     db.session.delete(forum)
@@ -78,7 +78,7 @@ def add_forum_likes(id):
     if not forum:
         return {"message": f"Forum with id {id} doesn't exist"}, 404
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     forum_likes = db.session.get(ForumLike, (forum.id, user_id))
     if forum_likes:
         return {"message": f"Forum {id} is already liked"}, 409
@@ -96,7 +96,7 @@ def delete_forum_likes(id):
     if not forum:
         return {"message": f"Forum with id {id} doesn't exist"}, 404
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     forum_likes = db.session.get(ForumLike, (forum.id, user_id))
     if not forum_likes:
         return {"message": f"Forum {id} is not liked yet"}, 409
@@ -151,7 +151,7 @@ def delete_forum_comment(id, comment_id):
     if not comment:
         return {"message": f"Comment with id {id} doesn't exist"}, 404
     
-    if comment.author_id != request.user.get("user_id"):
+    if comment.author_id != request.user.get("uid"):
         return {"message": f"You're not author of the comment with id {id}"}, 403
     
     db.session.delete(comment)

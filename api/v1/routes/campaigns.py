@@ -70,7 +70,7 @@ def get_registred_campaigns(id):
             .filter(*get_campaign_filters(status, location_id), Campaign.id.in_(campaigns_id)) \
             .order_by(*orders).all()
 
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
 
 @campaigns.route("/campaigns", methods=["GET"])
@@ -93,7 +93,7 @@ def get_campaigns():
             .filter(*keyword_search, *get_campaign_filters(status, location_id, user_id, is_registered)) \
             .order_by(*orders).all()
 
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
 
 @campaigns.route("/campaigns/<int:id>", methods=["GET"])
@@ -103,7 +103,7 @@ def get_campaign(id):
     if not campaign:
         return {"message": f"Campaign with id {id} doesn't exist"}, 404
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     return {"data": campaign.serialize(user_id)}, 200
 
 @campaigns.route("/campaigns/<int:id>/registrations", methods=["POST"])
@@ -113,7 +113,7 @@ def register_campaign(id):
     if not campaign:
         return {"message": f"Campaign with id {id} doesn't exist"}, 404
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     campaign_participant = db.session.query(CampaignParticipant) \
         .filter_by(user_id=user_id, campaign_id=campaign.id).first()
     
@@ -133,7 +133,7 @@ def submit_campaign_tasks(id):
     if not campaign:
         return {"message": f"Campaign with id {id} doesn't exist"}, 404
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     campaign_participant = db.session.query(CampaignParticipant) \
         .filter_by(user_id=user_id, campaign_id=campaign.id).first()
     
@@ -159,7 +159,7 @@ def get_campaign_detail(id):
     if not campaign_detail:
         return {"message": f"Campaign with id {id} doesn't exist"}, 404
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     return {"data": campaign_detail.serialize(user_id, id)}, 200
 
 @campaigns.route("/campaigns/<int:id>/participants", methods=["GET"])

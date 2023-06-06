@@ -62,7 +62,7 @@ def get_tourism(id):
     if not tourism:
         return {"message": f"Tourism with id {id} doesn't exist"}, 404
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     return {"data": tourism.serialize(user_id)}, 200
 
 @tourisms.route("/tourisms/<string:id>/favorites", methods=["POST"])
@@ -72,7 +72,7 @@ def create_tourism_favorite(id):
     if not tourism:
         return {"message": f"Tourism with id {id} doesn't exist"}, 404
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     tourism_favorites = db.session.get(TourismFavorite, (tourism.id, user_id))
     if tourism_favorites:
         return {"message": f"Tourism {id} is already in favorites"}, 409
@@ -90,7 +90,7 @@ def delete_tourism_favorite(id):
     if not tourism:
         return {"message": f"Tourism with id {id} doesn't exist"}, 404
     
-    user_id = request.user.get("user_id")
+    user_id = request.user.get("uid")
     tourism_favorites = db.session.get(TourismFavorite, (tourism.id, user_id))
     if not tourism_favorites:
         return {"message": f"Tourism {id} isn't a favorite yet"}, 409
