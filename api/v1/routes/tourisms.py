@@ -55,7 +55,7 @@ def get_tourisms():
 
     return {"data": Tourism.serialize_list(user_id, tourisms)}, 200
 
-@tourisms.route("/tourisms/<int:id>", methods=["GET"])
+@tourisms.route("/tourisms/<string:id>", methods=["GET"])
 @authenticated_only
 def get_tourism(id):
     tourism = db.session.get(Tourism, id)
@@ -65,7 +65,7 @@ def get_tourism(id):
     user_id = request.user.get("user_id")
     return {"data": tourism.serialize(user_id)}, 200
 
-@tourisms.route("/tourisms/<int:id>/favorites", methods=["POST"])
+@tourisms.route("/tourisms/<string:id>/favorites", methods=["POST"])
 @authenticated_only
 def create_tourism_favorite(id):
     tourism = db.session.get(Tourism, id)
@@ -83,7 +83,7 @@ def create_tourism_favorite(id):
 
     return {"data": tourism.serialize(user_id)}, 200
 
-@tourisms.route("/tourisms/<int:id>/favorites", methods=["DELETE"])
+@tourisms.route("/tourisms/<string:id>/favorites", methods=["DELETE"])
 @authenticated_only
 def delete_tourism_favorite(id):
     tourism = db.session.get(Tourism, id)
@@ -100,7 +100,7 @@ def delete_tourism_favorite(id):
 
     return {"data": tourism.serialize(user_id)}, 200
 
-@tourisms.route("/tourisms/<int:id>/details", methods=["GET"])
+@tourisms.route("/tourisms/<string:id>/details", methods=["GET"])
 @authenticated_only
 def get_tourism_details(id):
     tourism = db.session.get(Tourism, id)
