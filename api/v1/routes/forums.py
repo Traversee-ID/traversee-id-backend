@@ -64,7 +64,7 @@ def create_forum():
             return {"message": "File is not a valid image"}, 400
         
         bucket = get_bucket_storage(getenv("BUCKET_NAME"))
-        blob = bucket.blob(f"forums/{image.filename}.{image.content_type[6:]}")
+        blob = bucket.blob(f"forums/{image.filename}")
         blob.upload_from_file(image)
         blob.make_public()
 
@@ -73,13 +73,14 @@ def create_forum():
     db.session.add(forum)
     db.session.commit()
 
-    if campaign_id and isinstance(campaign_id, int):
+    if campaign_id and str(campaign_id).isdecimal():
+        campaign_id = int(campaign_id)
         campaign = db.session.get(Campaign, campaign_id)
-
-    if campaign:
-        forum_campaign = ForumCampaign(forum_id=forum.id, campaign_id=campaign.id)
-        db.session.add(forum_campaign)
-        db.session.commit()
+        
+        if campaign:
+            forum_campaign = ForumCampaign(forum_id=forum.id, campaign_id=campaign.id)
+            db.session.add(forum_campaign)
+            db.session.commit()
 
     user_id = request.user.get("uid")
     return {"data": forum.serialize(user_id)}, 200
