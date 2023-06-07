@@ -35,22 +35,27 @@ def get_tourism_query(request):
     query.append(request.args.get("category_id"))
     query.append(request.args.get("is_favorite"))
     query.append(request.user.get("uid"))
+    query.append(request.args.get("search"))
 
     return query
 
 @tourisms.route("/tourisms", methods=["GET"])
 @authenticated_only
 def get_tourisms():
-    page, location_id, category_id, is_favorite, user_id = get_tourism_query(request)
+    page, location_id, category_id, is_favorite, user_id, search = get_tourism_query(request)
+
+    keyword_search = []
+    if search:
+        keyword_search = [Tourism.name.ilike(f'%{keyword}%') for keyword in search.split()]
 
     if page is not None and page.isdecimal():
         tourisms = db.session.query(Tourism) \
-            .filter(*get_tourism_filters(location_id, category_id, is_favorite, user_id)) \
+            .filter(*keyword_search, *get_tourism_filters(location_id, category_id, is_favorite, user_id)) \
             .order_by(Tourism.name.asc()) \
             .paginate(page=int(page), per_page=5, error_out=False)
     else:
         tourisms = db.session.query(Tourism) \
-            .filter(*get_tourism_filters(location_id, category_id, is_favorite, user_id)) \
+            .filter(*keyword_search, *get_tourism_filters(location_id, category_id, is_favorite, user_id)) \
             .order_by(Tourism.name.asc()).all()
 
     return {"data": Tourism.serialize_list(user_id, tourisms)}, 200
