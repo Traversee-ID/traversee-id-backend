@@ -1,3 +1,4 @@
+from firebase_admin import auth
 from flask import Blueprint, request
 from ..extensions import db
 from ..decorator import authenticated_only
@@ -5,6 +6,28 @@ from ..models.campaigns import Campaign
 from ..models.forums import *
 
 forums = Blueprint("forums", __name__)
+
+@forums.route("/users/<string:id>/forums")
+@authenticated_only
+def get_forums_by_author(id):
+    try:
+        auth.get_user(uid=id)
+    except auth.UserNotFoundError:
+        return {"message": f"User with id {id} doesn't exist"}, 404
+    
+    page = request.args.get("page")
+
+    if page is not None and page.isdecimal():
+        forums = db.session.query(Forum) \
+            .filter_by(author_id=id) \
+            .order_by(Forum.created_at.desc()) \
+            .paginate(page=int(page), per_page=5, error_out=False)
+    else:
+        forums = db.session.query(Forum) \
+            .filter_by(author_id=id) \
+            .order_by(Forum.created_at.desc()).all()
+    
+    return {"data": Forum.serialize_list(id, forums)}, 200
 
 @forums.route("/forums")
 @authenticated_only
@@ -15,7 +38,6 @@ def get_forums():
         forums = db.session.query(Forum) \
             .order_by(Forum.created_at.desc()) \
             .paginate(page=int(page), per_page=5, error_out=False)
-
     else:
         forums = db.session.query(Forum).order_by(Forum.created_at.desc()).all()
     
