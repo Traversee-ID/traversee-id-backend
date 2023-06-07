@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 from firebase_admin import auth
-from google.cloud import storage
+from os import getenv
+from ..helper import get_bucket_storage
 from ..decorator import authenticated_only
 
 profiles = Blueprint("profiles", __name__)
@@ -8,8 +9,7 @@ profiles = Blueprint("profiles", __name__)
 @profiles.route("/profile-pictures", methods=["PUT"])
 @authenticated_only
 def update_profile_picture():
-    storage_client = storage.Client()
-    bucket = storage_client.get_bucket("traversee-id")
+    bucket = get_bucket_storage(getenv("BUCKET_NAME"))
     user_id = request.user.get("uid")
 
     file = request.files.get("photo")

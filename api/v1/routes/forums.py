@@ -1,8 +1,9 @@
 from firebase_admin import auth
 from flask import Blueprint, request
-from google.cloud import storage
+from os import getenv
 from ..extensions import db
 from ..decorator import authenticated_only
+from ..helper import get_bucket_storage
 from ..models.campaigns import Campaign
 from ..models.forums import *
 
@@ -62,9 +63,7 @@ def create_forum():
         if not image.content_type.startswith("image/"):
             return {"message": "File is not a valid image"}, 400
         
-        storage_client = storage.Client()
-        bucket = storage_client.get_bucket("traversee-id")
-
+        bucket = get_bucket_storage(getenv("BUCKET_NAME"))
         blob = bucket.blob(f"forums/{image.filename}.{image.content_type[6:]}")
         blob.upload_from_file(image)
         blob.make_public()
