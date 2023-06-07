@@ -1,5 +1,6 @@
 from firebase_admin import auth
 from flask import Blueprint, request
+from google.cloud import storage
 from ..extensions import db
 from ..decorator import authenticated_only
 from ..models.campaigns import Campaign
@@ -47,14 +48,29 @@ def get_forums():
 @forums.route("/forums", methods = ['POST'])
 @authenticated_only
 def create_forum():
-    title = request.json.get("title")
-    text = request.json.get("text")
-    campaign_id = request.json.get("campaign_id")
+    data = request.form if request.content_type.startswith("multipart/form-data") else request.json
+
+    title = data.get("title")
+    text = data.get("text")
+    campaign_id = data.get("campaign_id")
 
     if not title or not text:
         return {"message": "Title and text are required"}, 400
     
-    forum = Forum(title=title, text=text, author_id=request.user.get('user_id'))
+    image = request.files.get("image")
+    if image:
+        if not image.content_type.startswith("image/"):
+            return {"message": "File is not a valid image"}, 400
+        
+        storage_client = storage.Client()
+        bucket = storage_client.get_bucket("traversee-id")
+
+        blob = bucket.blob(f"forums/{image.filename}.{image.content_type[6:]}")
+        blob.upload_from_file(image)
+        blob.make_public()
+
+    image_url = blob.public_url if blob else None
+    forum = Forum(title=title, text=text, image_url=image_url ,author_id=request.user.get('user_id'))
     db.session.add(forum)
     db.session.commit()
 
