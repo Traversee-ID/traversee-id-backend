@@ -18,8 +18,9 @@ class Forum(db.Model):
     text: str = db.Column(db.String(500), nullable=False)
     author_id: str = db.Column(db.String, nullable=False)
     image_url: str = db.Column(db.String)
-    comments = db.relationship('Comment', uselist=True)
-    likes = db.relationship('ForumLike', uselist=True)
+    comments = db.relationship('Comment', cascade="all, delete", uselist=True)
+    likes = db.relationship('ForumLike', cascade="all, delete", uselist=True)
+    campaigns = db.relationship('ForumCampaign', cascade="all, delete", uselist=False)
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     @property
@@ -54,8 +55,7 @@ class Forum(db.Model):
         forum_likes = db.session.query(ForumLike) \
             .filter_by(forum_id=self.id, user_id=user_id).first()
 
-        forum_campaign = db.session.get(ForumCampaign, self.id)
-        campaign = db.session.get(Campaign, forum_campaign.campaign_id) if forum_campaign else None
+        campaign = db.session.get(Campaign, self.campaigns.campaign_id) if self.campaigns else None
         campaign_extracted = {
             "id": campaign.id,
             "name": campaign.name,
