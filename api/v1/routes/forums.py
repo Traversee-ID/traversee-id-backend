@@ -59,16 +59,19 @@ def create_forum():
         return {"message": "Title and text are required"}, 400
     
     image = request.files.get("image")
+    image_url = None
+    
     if image:
         if not image.content_type.startswith("image/"):
             return {"message": "File is not a valid image"}, 400
         
         bucket = get_bucket_storage(getenv("BUCKET_NAME"))
         blob = bucket.blob(f"forums/{image.filename}")
+        
         blob.upload_from_file(image)
         blob.make_public()
+        image_url = blob.public_url
 
-    image_url = blob.public_url if blob else None
     forum = Forum(title=title, text=text, image_url=image_url ,author_id=request.user.get('user_id'))
     db.session.add(forum)
     db.session.commit()
