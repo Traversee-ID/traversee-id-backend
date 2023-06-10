@@ -1,4 +1,6 @@
+import requests
 from flask import Blueprint, request
+from os import getenv
 from ..extensions import db
 from ..decorator import authenticated_only
 from ..models.tourisms import *
@@ -137,3 +139,15 @@ def get_tourism_locations():
     locations = db.session.query(TourismLocation) \
         .order_by(TourismLocation.name.asc()).all()
     return {"data": locations}, 200
+
+@tourisms.route("/tourism-recommendations", methods=["GET"])
+@authenticated_only
+def get_tourism_recomendations():
+    user_id = request.user.get("uid")
+    url = getenv("RECOMMENDATIONS_SERVICE")
+
+    response = requests.post(url, json={"user_id": user_id})
+    if response.status_code == 200:
+        return response.json(), 200
+    
+    return {"message": "Failed"}, 500
