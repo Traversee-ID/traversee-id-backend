@@ -148,6 +148,6 @@ def get_tourism_recomendations():
 
     response = requests.post(url, json={"user_id": user_id})
     if response.status_code == 200:
-        return response.json(), 200
-    
-    return {"message": "Failed"}, 500
+        tourism = db.session.query(Tourism).paginate(page=1, per_page=10, error_out=False)
+        return {"data": Tourism.serialize_list(user_id, tourism)}, 200
+    return {"data": []}, 200
