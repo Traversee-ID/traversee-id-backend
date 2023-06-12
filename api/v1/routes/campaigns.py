@@ -7,7 +7,7 @@ from ..models.campaigns import *
 
 campaigns = Blueprint("campaigns", __name__)
 
-def get_campaign_filters(status, location_id, user_id, is_registered):
+def get_campaign_filters(status, location_id, category_id, user_id, is_registered):
     filters = []
     if status == "ongoing":
         filters = [Campaign._start_date <= date.today(), Campaign._end_date >= date.today()]
@@ -19,6 +19,10 @@ def get_campaign_filters(status, location_id, user_id, is_registered):
     if location_id:
         location_id = int(location_id) if location_id.isdecimal() else None
         filters.append(Campaign.location_id == location_id)
+
+    if category_id:
+        category_id = int(category_id) if category_id.isdecimal() else None
+        filters.append(Campaign.category_id == category_id)
 
     if is_registered:
         campaigns_participant = db.session.query(CampaignParticipant.campaign_id) \
@@ -37,6 +41,7 @@ def get_campaign_query(request):
     query.append(request.args.get("page"))
     query.append(request.args.get("status"))
     query.append(request.args.get("location_id"))
+    query.append(request.args.get("category_id"))
     query.append(request.args.get("is_registered"))
     query.append(request.user.get("uid"))
     query.append(request.args.get("search"))
@@ -46,7 +51,7 @@ def get_campaign_query(request):
 @campaigns.route("/campaigns", methods=["GET"])
 @authenticated_only
 def get_campaigns():
-    page, status, location_id, is_registered, user_id, search = get_campaign_query(request)
+    page, status, location_id, category_id, is_registered, user_id, search = get_campaign_query(request)
     orders = Campaign._end_date.desc(), Campaign._start_date.asc()
 
     keyword_search = []
@@ -55,12 +60,12 @@ def get_campaigns():
 
     if page is not None and page.isdecimal():
         campaigns = db.session.query(Campaign) \
-            .filter(*keyword_search, *get_campaign_filters(status, location_id, user_id, is_registered)) \
+            .filter(*keyword_search, *get_campaign_filters(status, location_id, category_id, user_id, is_registered)) \
             .order_by(*orders) \
             .paginate(page=int(page), per_page=5, error_out=False)
     else:
         campaigns = db.session.query(Campaign) \
-            .filter(*keyword_search, *get_campaign_filters(status, location_id, user_id, is_registered)) \
+            .filter(*keyword_search, *get_campaign_filters(status, location_id, category_id, user_id, is_registered)) \
             .order_by(*orders).all()
 
     user_id = request.user.get("uid")
@@ -156,32 +161,6 @@ def get_campaign_locations():
     locations = db.session.query(CampaignLocation) \
         .order_by(CampaignLocation.name.asc()).all()
     return {"data": locations}, 200
-
-@campaigns.route("/campaign-categories/<int:id>/campaigns", methods=["GET"])
-@authenticated_only
-def get_campaigns_by_category(id):
-    category = db.session.get(CampaignCategory, id)
-    if not category:
-        return {"message": f"Category with id {id} doesn't exist"}, 404
-    
-    page, status, location_id, is_registered, user_id, search = get_campaign_query(request)
-    orders = Campaign._end_date.desc(), Campaign._start_date.asc()
-
-    keyword_search = []
-    if search:
-        keyword_search = [Campaign.name.ilike(f'%{keyword}%') for keyword in search.split()]
-
-    if page is not None and page.isdecimal():
-        campaigns = db.session.query(Campaign) \
-            .filter(*keyword_search, *get_campaign_filters(status, location_id, user_id, is_registered), Campaign.category_id==id) \
-            .order_by(*orders) \
-            .paginate(page=int(page), per_page=5, error_out=False)
-    else:
-        campaigns = db.session.query(Campaign) \
-            .filter(*keyword_search, *get_campaign_filters(status, location_id, user_id, is_registered), Campaign.category_id==id) \
-            .order_by(*orders).all()
-    
-    return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
 
 @campaigns.route("/campaign-categories", methods=["GET"])
 @authenticated_only
