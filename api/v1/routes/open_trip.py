@@ -6,7 +6,7 @@ from ..models.open_trip import *
 
 open_trip = Blueprint("open_trip", __name__)
 
-@open_trip.route('/open_trip')
+@open_trip.route('/open-trips')
 @authenticated_only
 def get_trips():
     page = request.args.get("page")
@@ -20,7 +20,7 @@ def get_trips():
     
     return {"data": trips}, 200
 
-@open_trip.route('/open_trip', methods = ['POST'])
+@open_trip.route('/open-trips', methods = ['POST'])
 @authenticated_only
 def create_trip():
     title = request.json.get("title")
@@ -44,7 +44,7 @@ def create_trip():
 
     return {"data": trip}, 200
 
-@open_trip.route('/open_trip/<int:id>')
+@open_trip.route('/open-trips/<int:id>')
 @authenticated_only
 def get_trip(id):
     trip = db.session.get(OpenTrip, id)
@@ -53,7 +53,7 @@ def get_trip(id):
     
     return {"data": trip}, 200
 
-@open_trip.route('/open_trip/<int:id>', methods=["DELETE"])
+@open_trip.route('/open-trips/<int:id>', methods=["DELETE"])
 @authenticated_only
 def delete_trip(id):
     trip = db.session.get(OpenTrip, id)
@@ -64,7 +64,7 @@ def delete_trip(id):
     db.session.commit()
     return {"message": f"Open trip with id {id} deleted"}, 200
 
-@open_trip.route('/open_trip/<int:id>/destinations')
+@open_trip.route('/open-trips/<int:id>/destinations')
 @authenticated_only
 def get_destinations(id):
     trip = db.session.get(OpenTrip, id)
@@ -75,7 +75,7 @@ def get_destinations(id):
     
     return {"data": destinations}, 200
 
-@open_trip.route('/open_trip/<int:id>/destinations' , methods=["POST"])
+@open_trip.route('/open-trips/<int:id>/destinations' , methods=["POST"])
 @authenticated_only
 def post_destination(id):
     name = request.json.get("name")
@@ -97,7 +97,7 @@ def post_destination(id):
     
     return {"data": destination}, 200
 
-@open_trip.route('/open_trip/<int:id>/destinations/<int:destination_id>', methods=["DELETE"])
+@open_trip.route('/open-trips/<int:id>/destinations/<int:destination_id>', methods=["DELETE"])
 @authenticated_only
 def delete_destination(id, destination_id):
     trip = db.session.get(OpenTrip, id)
