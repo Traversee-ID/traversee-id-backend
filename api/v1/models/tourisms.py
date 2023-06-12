@@ -9,8 +9,8 @@ class Tourism(db.Model):
     location_name: str
 
     id: str = db.Column(db.String(30), primary_key=True)
-    name: str = db.Column(db.String(150), nullable=False)
-    image_url: str = db.Column(db.String(150))
+    name: str = db.Column(db.String, nullable=False)
+    image_url: str = db.Column(db.String)
     location_id = db.Column(db.Integer, db.ForeignKey('tourism_locations.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('tourism_categories.id'), nullable=False)
     description = db.relationship("TourismDetail", uselist=False)
