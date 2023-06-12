@@ -43,36 +43,6 @@ def get_campaign_query(request):
 
     return query
 
-@campaigns.route("/users/<string:id>/campaigns", methods=["GET"])
-@authenticated_only
-def get_registred_campaigns(id):
-    try:
-        auth.get_user(uid=id)
-    except auth.UserNotFoundError:
-        return {"message": f"User with id {id} doesn't exist"}, 404
-
-    campaigns_participant = db.session.query(CampaignParticipant.campaign_id) \
-        .filter_by(user_id=id).all()
-    campaigns_id = [campaign_id[0] for campaign_id in campaigns_participant]
-
-    page = request.args.get("page")
-    status = request.args.get("status")
-    location_id = request.args.get("location_id")
-    orders = Campaign._end_date.desc(), Campaign._start_date.asc()
-
-    if page is not None and page.isdecimal():
-        campaigns = db.session.query(Campaign) \
-            .filter(*get_campaign_filters(status, location_id), Campaign.id.in_(campaigns_id)) \
-            .order_by(*orders) \
-            .paginate(page=int(page), per_page=5, error_out=False)
-    else:
-        campaigns = db.session.query(Campaign) \
-            .filter(*get_campaign_filters(status, location_id), Campaign.id.in_(campaigns_id)) \
-            .order_by(*orders).all()
-
-    user_id = request.user.get("uid")
-    return {"data": Campaign.serialize_list(user_id, campaigns)}, 200
-
 @campaigns.route("/campaigns", methods=["GET"])
 @authenticated_only
 def get_campaigns():
