@@ -9,12 +9,12 @@
 
 ## Table of Contents
 - [Table of Contents](#table-of-contents)
-- [Architecture](#architecture)
+- [Deployment Architecture](#deployment-architecture)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentations)
 
-## Architecture
-Here are the details of this project's architecture.
+## Deployment Architecture
+The deployment architecture of this project can be seen in the image below.
 ![Architecture](assets/architecture.png)
 
 ## Project Structure
@@ -43,4 +43,4 @@ Here are the details of this project's architecture.
 ```
 
 ## API Documentation
-The details of the API documentation can be accessed at [documenter.getpostman.com/view/2s93sc4spc](https://documenter.getpostman.com/view/2s93sc4spc).
+The details of the API documentation can be accessed at [here](https://documenter.getpostman.com/view/2s93sc4spc).
