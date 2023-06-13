@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, request
 from ..extensions import db
 from ..decorator import authenticated_only
-from ..models.open_trip import *
+from ..models.open_trips import *
 
 open_trip = Blueprint("open_trip", __name__)
 
