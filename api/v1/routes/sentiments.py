@@ -13,6 +13,6 @@ def get_sentiment():
 
     response = requests.get(f"{url}/analyze_sentiment?words={words}")
     if response.status_code == 404:
-        return {"message": response.json.get("message")}, 404
+        return response.json(), 404
     
-    return {"data": response.json.get("data")}, 200
+    return response.json(), 200
