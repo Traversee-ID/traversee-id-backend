@@ -12,6 +12,13 @@
 - [Architecture](#architecture)
 - [Development](#development)
 - [Deployment](#deployment)
+  - [Firebase](#firebase)
+  - [Cloud SQL](#cloud-sql)
+  - [Cloud Storage](#cloud-storage)
+  - [Secret Manager](#secret-manager)
+  - [Service Account](#service-account)
+  - [Cloud Scheduler](#cloud-scheduler)
+  - [Cloud Run](#cloud-run)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentations)
 
@@ -46,10 +53,30 @@ flask --app main run -p 8080
 ```
 
 ## Deployment
+### Firebase
+
+### Cloud SQL
+
+### Cloud Storage
+
+### Secret Manager
+
+### Service Account
+
+### Cloud Scheduler
+
+### Cloud Run
+1. Recommendation Service
+- The recommendation code service can be accessed [here](https://github.com/Traversee-ID/traversee-id-machine-learning/tree/main/recommendations/service).
+- Submit a build using Google Cloud Build
+
+2. Sentiment Service
+- The sentiment code service can be accessed [here](https://github.com/Traversee-ID/traversee-id-machine-learning/tree/main/sentiment_analysis/service).
+- Submit a build using Google Cloud Build
+
+3. Main Service
 - Clone this repository
-```
-git clone https://github.com/Traversee-ID/traversee-id-backend.git
-```
+- Submit a build using Google Cloud Build
 
 ## Project Structure
 ```
