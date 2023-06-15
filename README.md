@@ -54,16 +54,49 @@ flask --app main run -p 8080
 
 ## Deployment
 ### Firebase
+- Enable Firebase Authentication
+- Add Android app 
+- Generate Firebase Admin private key
+- The required outcomes are `PRIVATE_KEY`, `PROJECT_ID`, `PRIVATE_KEY_ID`, `CLIENT_EMAIL`, `CLIENT_ID`, and `CLIENT_X509_CERT_URL`
 
 ### Cloud SQL
+- Create a PostgreSQL instance
+  - PostgreSQL version 13
+  - Connections with Public IP, specify CIDR ranges e.g. 0.0.0.0/0
+  - Create a new database
+  - Create a new user account
+- The required outcomes is `DATABASE_URI` with content "postgresql://`DB_USER`:`DB_PASSWORD`@`DB_HOST`:`DB_PORT`/`DB_NAME`"
 
 ### Cloud Storage
+- Create a bucket
+  - Standard default class
+  - Enforce public access prevention
+  - Fine-grained access control
+- The required outcomes is `BUCKET_NAME`
 
 ### Secret Manager
+- Create several secret for credentials
+- An example can be seen in the image below
+![Secret Manager](assets/secret-manager.png)
 
 ### Service Account
+- Create two new service accounts
+  - Recommendation Service Invoker
+    - Cloud Run Invoker role
+  - Traversee Cloud Run Service
+    - Secret Manager Secret Accessor role
+    - Storage Object Admin role
+- An example can be seen in the image below
+![Service Account](assets/service-account.png)
 
 ### Cloud Scheduler
+- Create a new job
+  - Frequency: `59 11,23 * * 0-6` (Every day at 11:59 and 23:59)
+  - Target type: `HTTP`
+  - URL: `<RECOMMENDATIONS_SERVICE>/reload`
+  - HTTP method: `POST`
+  - Auth header: `Add OIDC token`
+  - Service account: `Recommendation Service Invoker`
 
 ### Cloud Run
 1. Recommendation Service
