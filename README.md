@@ -53,6 +53,8 @@ flask --app main run -p 8080
 ```
 
 ## Deployment
+The unspecified aspects can be adjusted individually or using default values. Additionally, it also allows for enhancing various aspects such as Cloud SQL configuration.
+
 ### Firebase
 - Enable Firebase Authentication
 - Add Android app 
@@ -102,14 +104,28 @@ flask --app main run -p 8080
 1. Recommendation Service
 - The recommendation code service can be accessed [here](https://github.com/Traversee-ID/traversee-id-machine-learning/tree/main/recommendations/service).
 - Submit a build using Google Cloud Build
+- Create a new service with the recommendation container image
+  - Environment variables from secrets: `DATABASE_URI`
+  - Ingress control: `All`
+  - Authentication: `Allow unauthenticated invocations`
+  - Service account: `Traversee Cloud Run Service`
 
 2. Sentiment Service
 - The sentiment code service can be accessed [here](https://github.com/Traversee-ID/traversee-id-machine-learning/tree/main/sentiment_analysis/service).
 - Submit a build using Google Cloud Build
+- Create a new service with the sentiment container image
+  - Ingress control: `All`
+  - Authentication: `Allow unauthenticated invocations`
+  - Service account: `Traversee Cloud Run Service`
 
 3. Main Service
 - Clone this repository
 - Submit a build using Google Cloud Build
+- - Create a new service with the main container image
+  - Environment variables from secrets: `PRIVATE_KEY`, `PROJECT_ID`, `PRIVATE_KEY_ID`, `CLIENT_EMAIL`, `CLIENT_ID`, `CLIENT_X509_CERT_URL`, `DATABASE_URI`, `RECOMMENDATIONS_SERVICE`, and `SENTIMENTS_SERVICE`
+  - Ingress control: `All`
+  - Authentication: `Allow unauthenticated invocations`
+  - Service account: `Traversee Cloud Run Service`
 
 ## Project Structure
 ```
