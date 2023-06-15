@@ -109,6 +109,7 @@ The unspecified aspects can be adjusted individually or using default values. Ad
   - Ingress control: `All`
   - Authentication: `Allow unauthenticated invocations`
   - Service account: `Traversee Cloud Run Service`
+- The required outcomes is `RECOMMENDATIONS_SERVICE` (URL recommendation service)
 
 2. Sentiment Service
 - The sentiment code service can be accessed [here](https://github.com/Traversee-ID/traversee-id-machine-learning/tree/main/sentiment_analysis/service).
@@ -117,11 +118,12 @@ The unspecified aspects can be adjusted individually or using default values. Ad
   - Ingress control: `All`
   - Authentication: `Allow unauthenticated invocations`
   - Service account: `Traversee Cloud Run Service`
+- The required outcomes is `SENTIMENTS_SERVICE` (URL sentiment service)
 
 3. Main Service
 - Clone this repository
 - Submit a build using Google Cloud Build
-- - Create a new service with the main container image
+- Create a new service with the main container image
   - Environment variables from secrets: `PRIVATE_KEY`, `PROJECT_ID`, `PRIVATE_KEY_ID`, `CLIENT_EMAIL`, `CLIENT_ID`, `CLIENT_X509_CERT_URL`, `DATABASE_URI`, `RECOMMENDATIONS_SERVICE`, and `SENTIMENTS_SERVICE`
   - Ingress control: `All`
   - Authentication: `Allow unauthenticated invocations`
