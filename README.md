@@ -40,6 +40,10 @@ SENTIMENTS_SERVICE="<URL_SENTIMENTS_SERVICE>"
 ```
 pip install -r requirements.txt
 ```
+- Run the application
+```
+flask --app main run -p 8080
+```
 
 ## Deployment
 - Clone this repository
