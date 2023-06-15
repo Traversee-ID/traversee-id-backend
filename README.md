@@ -34,6 +34,7 @@ CLIENT_ID="<FIREBASE_CLIENT_ID>"
 CLIENT_X509_CERT_URL="<FIREBASE_CLIENT_X509_CERT_URL>"
 DATABASE_URI="postgresql://<DB_USER>:<DB_PASSWORD>@<DB_HOST>:<DB_PORT>/<DB_NAME>"
 RECOMMENDATIONS_SERVICE="<URL_RECOMMENDATIONS_SERVICE>"
+SENTIMENTS_SERVICE="<URL_SENTIMENTS_SERVICE>"
 ```
 - Install project dependencies
 ```
@@ -62,6 +63,7 @@ git clone https://github.com/Traversee-ID/traversee-id-backend.git
 │   │   │   ├───forums.py
 │   │   │   ├───open_trips.py
 │   │   │   ├───profiles.py
+│   │   │   ├───sentiments.py
 │   │   │   └───tourisms.py
 │   │   ├───__init__.py
 │   │   ├───decorator.py
