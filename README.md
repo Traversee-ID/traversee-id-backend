@@ -21,6 +21,7 @@
   - [Cloud Run](#cloud-run)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentations)
+- [Cloud Computing Team](#cloud-computing-team)
 
 ## Architecture
 The architecture of this project can be seen in the image below.
@@ -157,3 +158,9 @@ The unspecified aspects can be adjusted individually or using default values. Ad
 
 ## API Documentation
 The details of the API documentation can be accessed at [here](https://documenter.getpostman.com/view/2s93sc4spc).
+
+## Cloud Computing Team
+| Name | Student ID | Contact |
+| - | - | - |
+| Muhammad Fikri Haryanto | C181DSX0783 | <a href="https://www.linkedin.com/in/mfikriharyanto"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white" /></a> <a href="https://github.com/mfikriharyanto"><img src="https://img.shields.io/badge/GitHub-100000?style=flat&logo=github&logoColor=white" /></a> |
+| Imam Azka Ramadhan Aditia | C181DSX3667 | <a href="https://www.linkedin.com/in/imam-azka-ramadhan"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white" /></a> <a href="https://github.com/imamazka"><img src="https://img.shields.io/badge/GitHub-100000?style=flat&logo=github&logoColor=white" /></a> |
